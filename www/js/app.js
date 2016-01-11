@@ -3,10 +3,76 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'Loop' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-var myApp = angular.module('Loop', ['ionic', 'ui.calendar'])
+var app = angular.module('Loop', ['ionic', 'ui.calendar'])
 
-myApp.controller('CalendarCtrl', function($scope) {
-    $scope.eventSources = [];
+app.config(function($stateProvider, $urlRouterProvider) {
+    $urlRouterProvider.otherwise('/loops')
+    
+    $stateProvider.state('app', {
+        abstract: true,
+        templateUrl: 'main.html'
+    })
+    
+    $stateProvider.state('app.loops', {
+        abstract: true,
+        url: '/loops',
+        views: {
+            loops: {
+                template: '<ion-nav-view></ion-nav-view>'
+            }
+        }   
+})
+    
+    $stateProvider.state('app.loops.index', {
+        url: '',
+        templateUrl: 'loops.html',
+        controller: 'LoopsCtrl'
+})
+    
+    $stateProvider.state('app.loops.detail', {
+        url: '/:loop',
+        templateUrl: 'loop.html',
+        controller: 'loopCtrl',
+        resolve: {
+            loop: function($stateParams, loopsService) {
+        return loopsService.getloop($stateParams.loop)
+            }
+        }
+})
+    
+    $stateProvider.state('app.help', {
+        url: '/help',
+        views: {
+            help: {
+            templateUrl: 'help.html'
+            }
+        }
+})
+})
+
+app.factory('loopsService', function() {
+  var loops = [
+      {title: "Take out the trash", done: true},
+      {title: "Do laundry", done: false},
+      {title: "Start cooking dinner", done: false}
+   ]
+
+  return {
+    loops: loops,
+    getloop: function(index) {
+      return loops[index]
+    }
+  }
+})
+
+
+app.controller('LoopsCtrl', function($scope, loopsService) {
+      $scope.loops = loopsService.loops
+})
+
+app.controller('loopCtrl', function($scope, loop) {
+    $scope.loop = loop;
+    $scope.eventSources = []
 })
 
 .run(function($ionicPlatform) {
