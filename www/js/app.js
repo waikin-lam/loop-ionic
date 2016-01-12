@@ -6,16 +6,25 @@
 var app = angular.module('Loop', ['ionic', 'ui.calendar'])
 
 app.config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise('/loops')
+    $urlRouterProvider.otherwise('/sign-in')
     
+    // when a state is "active", all of its ancestor states are implicitly active as well.
+    $stateProvider.state('signin', {
+        url: '/sign-in',
+        templateUrl: 'sign-in.html',
+        controller: 'SignInCtrl'
+    })
+
     $stateProvider.state('app', {
         abstract: true,
         templateUrl: 'main.html'
     })
     
     $stateProvider.state('app.loops', {
+        // abstract state will never be directly be activated but provides inherited properties to its common children states.
         abstract: true,
         url: '/loops',
+        // views property sets up multiple views within a single state.
         views: {
             loops: {
                 template: '<ion-nav-view></ion-nav-view>'
@@ -30,11 +39,14 @@ app.config(function($stateProvider, $urlRouterProvider) {
 })
     
     $stateProvider.state('app.loops.detail', {
-        url: '/:loop',
+        url: '/loop',
         templateUrl: 'loop.html',
         controller: 'loopCtrl',
+        // resolve - to provide controller with content or data that is custom to the state.
         resolve: {
+            //injection of service into resolve function. Service then returns a promise. $stateParams get access to url parameters.
             loop: function($stateParams, loopsService) {
+                //getloop is a service method that uses $http to fetch loopsService
         return loopsService.getloop($stateParams.loop)
             }
         }
@@ -65,7 +77,7 @@ app.factory('loopsService', function() {
   }
 })
 
-
+//this controller waits for the state to be completely resolved before instantiation
 app.controller('LoopsCtrl', function($scope, loopsService) {
       $scope.loops = loopsService.loops
 })
@@ -73,6 +85,13 @@ app.controller('LoopsCtrl', function($scope, loopsService) {
 app.controller('loopCtrl', function($scope, loop) {
     $scope.loop = loop;
     $scope.eventSources = []
+})
+
+app.controller('SignInCtrl', function($scope, $state) {
+    $scope.signIn = function(user) {
+        console.log('Sign-In', user);
+        $state.go('app.loops.index')
+    };
 })
 
 .run(function($ionicPlatform) {
