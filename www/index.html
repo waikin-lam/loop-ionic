@@ -26,6 +26,8 @@
       <script type="text/javascript" src="lib/angular-ui-calendar/src/calendar.js"></script>
       <script type="text/javascript" src="lib/fullcalendar/dist/fullcalendar.min.js"></script>
       <script type="text/javascript" src="lib/fullcalendar/dist/gcal.js"></script>
+      <!-- jquery mousewheel plugin -->
+      <script type="text/javascript" src="lib/jquery-mousewheel/jquery.mousewheel.js"></script>
    
     <!-- your app's js -->
     <script src="js/app.js"></script>
@@ -36,7 +38,7 @@
       <ion-nav-view></ion-nav-view>
       
       <script type="text/ng-template" id="sign-in.html">
-        <ion-view view-title="Sign-In">
+        <ion-view hide-nav-bar="true">
             <ion-content>
               <div class="list">
                 <label class="item item-input">
@@ -59,33 +61,148 @@
       <script type="text/ng-template" id="main.html">
         <ion-nav-bar class="bar-positive">
           <ion-nav-back-button class="button-clear">
-            <i class="ion-arrow-left-c"></i> Back
+            <i class="ion-chevron-left"></i>
           </ion-nav-back-button>
         </ion-nav-bar>
-        
-        <ion-tabs class="tabs-positive">
-          <ion-tab icon="ion-ios-loop" ui-sref="app.loops">
+        <ion-tabs class="tabs-positive tabs-icon-top">
+          <ion-tab title="My Calendar" icon="tabs-icon-top ion-calendar" ui-sref="app.mycalendar">
+            <ion-nav-view name="mycalendar"></ion-nav-view>
+          </ion-tab>
+          
+          <ion-tab title="Loopers" icon="tabs-icon-top ion-person" ui-sref="#">
+            <ion-nav-view name="#"></ion-nav-view>
+          </ion-tab>
+            
+          <ion-tab title="Loops" icon="ion-ios-loop-strong" ui-sref="app.loops">
             <ion-nav-view name="loops"></ion-nav-view>
           </ion-tab>
             
             <!-- ui-sref is a directive that binds a link to a state -->
             
-          <ion-tab icon="ion-help" ui-sref="app.help">
+          <ion-tab title="Follow" icon="ion-arrow-swap" ui-sref="app.help">
             <ion-nav-view name="help"></ion-nav-view>
           </ion-tab>
           
-          <ion-tab icon="ion-log-out" ui-sref="signin">
-            <ion-nav-view name="sign-out"></ion-nav-view>
+          <ion-tab title="Settings" icon="ion-gear-a" ui-sref="#">
+            <ion-nav-view name="#"></ion-nav-view>
           </ion-tab>
         </ion-tabs>
       </script>
+      
+      <!-- script for Add Event popover form input in Loop -->
+      <script type="text/ng-template" id="loop-popover.html">
+        <ion-popover-view>
+          <ion-header-bar>
+              <h1 class="title">Add New Event</h1>
+          </ion-header-bar>
+            <ion-content>
+              <div class="list">
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Event</span>
+                  <input type="text" placeholder="Dinner Gathering">
+                </label>
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Date(s)</span>  
+                  <input type="text" placeholder="01/02/2016">
+                </label>
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Location</span>  
+                  <input type="text" placeholder="KLCC">
+                </label>
+                <!--<label class="item item-input item-stacked-label">
+                  <span class="input-label">Loop </span>
+                  <input type="text" placeholder="Buddies">
+                </label> -->
+            </div>
+            <div class="item item-button center">
+                <button class="button button-block button-outline button-positive">Add Event</button>
+            </div> 
+          </ion-content>
+        </ion-popover-view>
+      </script>
+      <!-- end of script for popover form -->
+      
+      <!-- script for Add Loop popover form input in Loops -->
+      <script type="text/ng-template" id="loops-popover.html">
+        <ion-popover-view>
+          <ion-header-bar>
+              <h1 class="title">Add New Loop</h1>
+          </ion-header-bar>
+            <ion-content>
+                <form ng-submit="addLoop(data)">
+                <div class="list">
+                  <label class="item item-input item-stacked-label">
+                    <span class="input label">Name of Loop</span>
+                      <input type="text" id="loopname" placeholder="Buddies" ng-model="data.newLoop">
+                  </label>
+                </div>
+                <div class="item item-button center">
+                <button class="button button-block button-outline button-positive" type="submit">Create New Loop</button>
+            </div>
+            </form>
+            </ion-content>
+        </ion-popover-view>
+      </script>
+      <!-- end of script for popover form -->
+      
+      <!-- script for Add Event popover form input in My Calendar -->
+      <script type="text/ng-template" id="my-popover.html">
+        <ion-popover-view>
+          <ion-header-bar>
+              <h1 class="title">Add New Event</h1>
+          </ion-header-bar>
+            <ion-content>
+              <div class="list">
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Event</span>
+                  <input type="text" id="event" placeholder="Dinner Gathering">
+                </label>
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Date(s)</span>  
+                  <input type="text" placeholder="01/02/2016">
+                </label>
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Location</span>  
+                  <input type="text" placeholder="KLCC">
+                </label>
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Loop </span>
+                  <input type="text" placeholder="Buddies">
+                </label>
+            </div>
+            <div class="item item-button center">
+                <button class="button button-block button-outline button-positive">Add Event</button>
+            </div> 
+          </ion-content>
+        </ion-popover-view>
+      </script>
+      <!-- end of script for popover form -->
+      
+      <script type="text/ng-template" id="mycalendar.html">
+        <ion-view title="My Calendar">
+            <ion-nav-buttons side="secondary">
+            <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
+                </ion-nav-buttons>
+          <ion-content>
+            <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
+          </ion-content>  
+        </ion-view>
+      </script>
 
     <script type="text/ng-template" id="loops.html">
-        <ion-view title="LOOP">
-            <ion-content>
-                <ion-list>
-                    <ion-item ng-repeat="loop in loops" class="item item-icon-right" ui-sref="app.loops.detail({loop: $index})">
+      <ion-view title="Loops">
+          <ion-nav-buttons side="primary">
+          <button class="button button-icon icon ion-ios-minus-outline" side="primary" ng-click="data.showDelete = !data.showDelete"></button>
+          </ion-nav-buttons>
+          <ion-nav-buttons side="secondary">
+            <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
+          </ion-nav-buttons>
+          <ion-content>
+                <ion-list show-delete="data.showDelete">
+                    <ion-item ng-repeat="loop in loops" class="item item-avatar" ui-sref="app.loops.detail({loop: $index})">
                     <span ng-class="{done: loop.done}">{{loop.title}}</span>
+                    <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(loop)"></ion-delete-button>
+                    <ion-option-button class="button-positive" ng-click="showConfirm()">Delete</ion-option-button>
                     </ion-item>
                 </ion-list>
             </ion-content>
@@ -93,11 +210,12 @@
     </script>
       
       <script type="text/ng-template" id="loop.html">
-        <ion-view title="Loop">
+            <ion-view hide-tab-bar>
+                <ion-nav-title>{{loop.title}}</ion-nav-title>
+                <ion-nav-buttons side="secondary">
+            <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
+                </ion-nav-buttons>
             <ion-content>
-                <div class="item">
-                    <p>{{loop.title}}</p>
-                </div>
                 <div ui-calendar ng-model="eventSources"></div>
                 <div class="item item-checkbox">
                     <div>

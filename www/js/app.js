@@ -5,6 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 var app = angular.module('Loop', ['ionic', 'ui.calendar'])
 
+//manages the parent-child view states
 app.config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/sign-in')
     
@@ -17,7 +18,18 @@ app.config(function($stateProvider, $urlRouterProvider) {
 
     $stateProvider.state('app', {
         abstract: true,
-        templateUrl: 'main.html'
+        templateUrl: 'main.html',
+        controller: 'MainCtrl'
+    })
+    
+    $stateProvider.state('app.mycalendar', {
+        url: '/mycalendar',
+        views: {
+            mycalendar: {    
+                templateUrl: 'mycalendar.html',
+                controller: 'MyCalendarCtrl'
+            }
+        }
     })
     
     $stateProvider.state('app.loops', {
@@ -62,11 +74,13 @@ app.config(function($stateProvider, $urlRouterProvider) {
 })
 })
 
+//services are substitutable objects wired together using dependency injection and are used to organise and share code across app
+//service factory function generates the single object or function that represents the service to the rest of the app
 app.factory('loopsService', function() {
   var loops = [
-      {title: "Take out the trash", done: true},
-      {title: "Do laundry", done: false},
-      {title: "Start cooking dinner", done: false}
+      {title: "Family", done: false},
+      {title: "Futsal Buddies", done: false},
+      {title: "Uniten", done: false}
    ]
 
   return {
@@ -77,14 +91,97 @@ app.factory('loopsService', function() {
   }
 })
 
-//this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, loopsService) {
-      $scope.loops = loopsService.loops
+app.controller('MainCtrl', function($scope) {
+// .fromTemplateUrl() method
+//$ionicPopover.fromTemplateUrl('my-popover.html', {
+  //  scope: $scope
+  //}).then(function(popover) {
+    //$scope.popover = popover;
+  //});
 })
 
-app.controller('loopCtrl', function($scope, loop) {
+//this controller waits for the state to be completely resolved before instantiation
+app.controller('LoopsCtrl', function($scope, loopsService, $ionicPopover, $ionicPopup) {
+    //scope for left side tab delete
+    $scope.data = {
+        showDelete: false
+    };
+        $scope.loops = loopsService.loops;
+        // from TemplateUrl() method
+    $ionicPopover.fromTemplateUrl('loops-popover.html', {
+        scope: $scope
+    }).then(function(popover) {
+        $scope.popover = popover;
+    });
+    //scope onItemDelete minus tab on nav-bar
+    $scope.onItemDelete = function(loop) {
+ $scope.loops.splice($scope.loops.indexOf(loop), 1);
+    };
+    //function to splice loop array
+    $scope.DeleteLoop = function(loop) {  
+ $scope.loops.splice($scope.loops.indexOf(loop), 1);
+    };
+    //showConfirm popup to delete loop
+    $scope.showConfirm = function() {
+        var confirmPopup = $ionicPopup.confirm({
+            title: 'Delete Loop',
+            template: 'Are you sure you want to close this loop?',
+            cancelText: 'No',
+            cancelType: 'button-default',
+            okText: 'Yes',
+            okType: 'button-positive'
+        });
+        confirmPopup.then(function(res) {
+            if(res) {
+                $scope.DeleteLoop(); //does not delete the correct loop yet!
+            } else {
+                //revert back, no action
+            }
+        });
+    };
+    //function to add loop to list
+    $scope.addLoop = function(data) {
+        $scope.loops.push({
+            title: data.newLoop
+        })
+        data.newLoop = '';
+    };
+})
+
+app.controller('loopCtrl', function($scope, loop, $ionicPopover) {
     $scope.loop = loop;
-    $scope.eventSources = []
+    $scope.eventSources = [];
+    // from TemplateUrl() method
+    $ionicPopover.fromTemplateUrl('loop-popover.html', {
+        scope: $scope
+    }).then(function(popover) {
+        $scope.popover = popover;
+    });
+})
+
+
+app.controller('MyCalendarCtrl', function($scope, $ionicPopover) {
+    $scope.eventSources = [];
+        $ionicPopover.fromTemplateUrl('my-popover.html', {
+        scope: $scope
+    }).then(function(popover) {
+        $scope.popover = popover;
+    });
+    //config object
+    $scope.uiConfig = {
+        calendar: {
+            height: 450,
+            editable: true,
+            //header:{
+          //left: 'month basicWeek basicDay agendaWeek agendaDay',
+          //center: 'title',
+          //right: 'today prev,next'
+        //}
+        dayClick: $scope.alertEventOnClick,
+        eventDrop: $scope.alertOnDrop,
+        eventResize: $scope.alertOnResize
+      }
+    };
 })
 
 app.controller('SignInCtrl', function($scope, $state) {
@@ -111,3 +208,81 @@ app.controller('SignInCtrl', function($scope, $state) {
     }
   });
 })
+
+//custom directive to hide tab bar
+.directive('hideTabBar', function($timeout) {
+  var style = angular.element('<style>').html(
+    '.has-tabs.no-tabs:not(.has-tabs-top) { bottom: 0; }\n' +
+    '.no-tabs.has-tabs-top { top: 44px; }');
+  document.body.appendChild(style[0]);
+  return {
+    restrict: 'A',
+    compile: function(element, attr) {
+      var tabBar = document.querySelector('.tab-nav');
+      return function($scope, $element, $attr) {
+        var scroll = $element[0].querySelector('.scroll-content');
+        $scope.$on('$ionicView.beforeEnter', function() {
+          tabBar.classList.add('slide-away');
+          scroll.classList.add('no-tabs');
+        })
+        $scope.$on('$ionicView.beforeLeave', function() {
+          tabBar.classList.remove('slide-away');
+          scroll.classList.remove('no-tabs')
+        });
+      }
+    }
+  };
+})
+//end of custom directive
+
+//hides previous/next/done bar that appears above keyboard
+.run(function($ionicPlatform) {
+    $ionicPlatform.ready(function() {    
+        if(window.cordova) {
+            cordova.plugins && cordova.plugins.Keyboard && cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+        }
+        if(window.StatusBar) {
+            StatusBar.styleDefault();
+    }
+    });
+})
+
+//keyboard custom directive
+.directive('input', function($timeout) {
+    return {
+        restrict: 'E',
+        scope: {
+            'returnClose': '=',
+            'onReturn': '&',
+            'onFocus': '&',
+            'onBlur': '&'
+        },
+        link: function(scope, element, attr){
+            element.bind('focus', function(e){
+                if(scope.onFocus){
+                    $timeout(function(){
+                        scope.onFocus();
+                    });
+                }        
+            });
+            element.bind('blur', function(e){
+                if(scope.onBlur){
+                    $timeout(function(){
+                        scope.onBlur();
+                    });
+                }
+            });
+            element.bind('keydown', function(e){
+                if(e.which == 13){
+                    if(scope.returnClose) element[0].blur();
+                    if(scope.onReturn){
+                        $timeout(function(){
+                            scope.onReturn();
+                        });                        
+                    }
+                } 
+            });   
+        }
+    }
+});
+
