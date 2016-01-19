@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'Loop' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-var app = angular.module('Loop', ['ionic', 'ui.calendar'])
+var app = angular.module('Loop', ['ionic', 'ui.calendar', 'firebase'])
 
 //manages the parent-child view states
 app.config(function($stateProvider, $urlRouterProvider) {
@@ -51,7 +51,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
 })
     
     $stateProvider.state('app.loops.detail', {
-        url: '/loop',
+        url: '/loop/:index',
         templateUrl: 'loop.html',
         controller: 'loopCtrl',
         // resolve - to provide controller with content or data that is custom to the state.
@@ -64,19 +64,31 @@ app.config(function($stateProvider, $urlRouterProvider) {
         }
 })
     
-    $stateProvider.state('app.help', {
+$stateProvider.state('app.help', {
         url: '/help',
         views: {
             help: {
             templateUrl: 'help.html'
             }
         }
-})
+    })
+    
+$stateProvider.state('app.settings', {
+        url: '/settings',
+        views: {
+            settings: {
+                templateUrl: 'settings.html',
+                controller: 'SettingsCtrl'
+            }
+        }
+    })
+                         
 })
 
 //services are substitutable objects wired together using dependency injection and are used to organise and share code across app
 //service factory function generates the single object or function that represents the service to the rest of the app
 app.factory('loopsService', function() {
+    //private variable loops, outside of return
   var loops = [
       {title: "Family", done: false},
       {title: "Futsal Buddies", done: false},
@@ -84,7 +96,8 @@ app.factory('loopsService', function() {
    ]
 
   return {
-    loops: loops,
+    loops,
+      //allows grabbing a single loop by index
     getloop: function(index) {
       return loops[index]
     }
@@ -167,16 +180,12 @@ app.controller('MyCalendarCtrl', function($scope, $ionicPopover) {
     }).then(function(popover) {
         $scope.popover = popover;
     });
-    //config object
+    //config calendar
     $scope.uiConfig = {
         calendar: {
-            height: 450,
+            height: 350,
             editable: true,
-            //header:{
-          //left: 'month basicWeek basicDay agendaWeek agendaDay',
-          //center: 'title',
-          //right: 'today prev,next'
-        //}
+        
         dayClick: $scope.alertEventOnClick,
         eventDrop: $scope.alertOnDrop,
         eventResize: $scope.alertOnResize
@@ -185,9 +194,45 @@ app.controller('MyCalendarCtrl', function($scope, $ionicPopover) {
 })
 
 app.controller('SignInCtrl', function($scope, $state) {
-    $scope.signIn = function(user) {
-        console.log('Sign-In', user);
-        $state.go('app.loops.index')
+
+    $scope.data = {};
+    
+    $scope.signupEmail = function() {
+        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        
+        ref.createUser({
+            email: $scope.data.email,
+            password: $scope.data.password }, function(error, userData) {
+            if (error) {
+                console.log("Error creating user:", error);
+            } else {
+                console.log("Successfully created user account with uid:", userData.uid);
+            $state.go('app.loops.index');
+            }
+        });
+    };
+    
+    $scope.loginEmail = function() {
+        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        
+        ref.authWithPassword({
+            email: $scope.data.email,
+            password: $scope.data.password }, function(error, authData) {
+            if (error) {
+                console.log("Login Failed!", error);
+            } else {
+                console.log("Authenticated successfully with payload:", authData);
+            }
+            $state.go('app.loops.index');
+        });
+    };
+})
+
+app.controller('SettingsCtrl', function($scope, $state) {
+    $scope.logOut = function() {
+        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        ref.unauth();
+        $state.go('signin');
     };
 })
 
