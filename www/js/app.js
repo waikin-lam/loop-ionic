@@ -228,6 +228,7 @@ app.controller('SignInCtrl', function($scope, $state) {
     };
 })
 
+//controller for settings tab
 app.controller('SettingsCtrl', function($scope, $state) {
     $scope.logOut = function() {
         var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
