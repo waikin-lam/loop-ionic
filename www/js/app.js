@@ -104,6 +104,18 @@ app.factory('loopsService', function() {
   }
 })
 
+//create a loops factory with a get method
+app.factory('loopsFactory', ["$firebaseObject", function($firebaseObject) {
+    return function(loop) {
+        //create a reference to the database node where we store data
+        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        var loopRef = ref.child(loop);
+        
+        //return as a synchronized object
+        return $firebaseObject(loopRef);
+    };
+}])
+
 app.controller('MainCtrl', function($scope) {
 // .fromTemplateUrl() method
 //$ionicPopover.fromTemplateUrl('my-popover.html', {
@@ -114,23 +126,41 @@ app.controller('MainCtrl', function($scope) {
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, loopsService, $ionicPopover, $ionicPopup) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory) {
     //scope for left side tab delete
     $scope.data = {
         showDelete: false
     };
-        $scope.loops = loopsService.loops;
+    $scope.loops = loopsFactory("loops");
+        //$scope.loops = loopsService.loops;
         // from TemplateUrl() method
     $ionicPopover.fromTemplateUrl('loops-popover.html', {
         scope: $scope
     }).then(function(popover) {
         $scope.popover = popover;
     });
-    //scope onItemDelete minus tab on nav-bar
-    $scope.onItemDelete = function(loop) {
- $scope.loops.splice($scope.loops.indexOf(loop), 1);
+    //scope onItemDelete minus tab on nav-bar, with popup confirm
+    $scope.onItemDelete = function(key) {
+       var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/loops');
+        var newRef = ref.child(key);
+        var confirmPopup = $ionicPopup.confirm({
+            title: 'Delete Loop',
+            template: 'Are you sure you want to close this loop?',
+            cancelText: 'No',
+            cancelType: 'button-default',
+            okText: 'Yes',
+            okType: 'button-positive'
+        });
+        confirmPopup.then(function(res) {
+            if(res) {
+                newRef.remove()
+            } else
+                {
+                    
+                }
+        });
     };
-    //function to splice loop array
+    //function to splice loop array (TO REDESIGN THIS ELEMENT)
     $scope.DeleteLoop = function(loop) {  
  $scope.loops.splice($scope.loops.indexOf(loop), 1);
     };
@@ -153,16 +183,19 @@ app.controller('LoopsCtrl', function($scope, loopsService, $ionicPopover, $ionic
         });
     };
     //function to add loop to list
-    $scope.addLoop = function(data) {
-        $scope.loops.push({
-            title: data.newLoop
-        })
-        data.newLoop = '';
+    $scope.addLoop = function(newLoop) {
+        var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
+        //var loopRef = ref.child("loops");
+        ref.push({
+            name: newLoop
+    });
+        newLoop = '';
+        console.log(newLoop);
     };
 })
 
 app.controller('loopCtrl', function($scope, loop, $ionicPopover) {
-    $scope.loop = loop;
+    //$scope.loop = loop;
     $scope.eventSources = [];
     // from TemplateUrl() method
     $ionicPopover.fromTemplateUrl('loop-popover.html', {
@@ -170,6 +203,20 @@ app.controller('loopCtrl', function($scope, loop, $ionicPopover) {
     }).then(function(popover) {
         $scope.popover = popover;
     });
+    //function to add event details to loops
+    $scope.addEvent = function(eventName, eventDate, eventLocation) {
+      var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
+      var newRef = ref.child(key);
+      ref.push({
+            title: eventName,
+            date: eventDate,
+            location: eventLocation
+        });
+        eventName: '';
+        eventDate: '';
+        eventLocation: '';
+        console.log(eventName);
+    };
 })
 
 
@@ -185,7 +232,12 @@ app.controller('MyCalendarCtrl', function($scope, $ionicPopover) {
         calendar: {
             height: 350,
             editable: true,
-        
+            events: {
+                url: 'https://vivid-heat-1234.firebaseio.com',
+                error: function() {
+                    alert('there was an error while fetching events!');
+                }
+            },
         dayClick: $scope.alertEventOnClick,
         eventDrop: $scope.alertOnDrop,
         eventResize: $scope.alertOnResize
