@@ -51,7 +51,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
 })
     
     $stateProvider.state('app.loops.detail', {
-        url: '/loop/:index',
+        url: '/:loop',
         templateUrl: 'loop.html',
         controller: 'loopCtrl',
         // resolve - to provide controller with content or data that is custom to the state.
@@ -89,14 +89,9 @@ $stateProvider.state('app.settings', {
 //service factory function generates the single object or function that represents the service to the rest of the app
 app.factory('loopsService', function() {
     //private variable loops, outside of return
-  var loops = [
-      {title: "Family", done: false},
-      {title: "Futsal Buddies", done: false},
-      {title: "Uniten", done: false}
-   ]
-
+  var loops = []
   return {
-    loops,
+    loops: loops,
       //allows grabbing a single loop by index
     getloop: function(index) {
       return loops[index]
@@ -106,11 +101,11 @@ app.factory('loopsService', function() {
 
 //create a loops factory with a get method
 app.factory('loopsFactory', ["$firebaseObject", function($firebaseObject) {
+    //create a reference to the database node where we store data
+    var loops = new Firebase("https://vivid-heat-1234.firebaseio.com");
+    
     return function(loop) {
-        //create a reference to the database node where we store data
-        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
-        var loopRef = ref.child(loop);
-        
+        var loopRef = loops.child(loop);
         //return as a synchronized object
         return $firebaseObject(loopRef);
     };
@@ -195,7 +190,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
 })
 
 app.controller('loopCtrl', function($scope, loop, $ionicPopover) {
-    //$scope.loop = loop;
+    $scope.loop = loop;
     $scope.eventSources = [];
     // from TemplateUrl() method
     $ionicPopover.fromTemplateUrl('loop-popover.html', {
