@@ -51,10 +51,13 @@ app.config(function($stateProvider, $urlRouterProvider) {
 })
     
     $stateProvider.state('app.loops.detail', {
-        url: '/:loop',
+        url: "/:loop",
         templateUrl: 'loop.html',
         controller: 'loopCtrl',
+        // in Angular digest cycle, the controller code is run last
+        // this resolve step is an easy way to make data available before the route is rendered
         // resolve - to provide controller with content or data that is custom to the state.
+        // resolve is an object whose keys map to values that can be injected in the state's controller
         resolve: {
             //injection of service into resolve function. Service then returns a promise. $stateParams get access to url parameters.
             loop: function($stateParams, loopsService) {
@@ -62,7 +65,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
         return loopsService.getloop($stateParams.loop)
             }
         }
-})
+    })
     
 $stateProvider.state('app.help', {
         url: '/help',
@@ -87,7 +90,7 @@ $stateProvider.state('app.settings', {
 
 //services are substitutable objects wired together using dependency injection and are used to organise and share code across app
 //service factory function generates the single object or function that represents the service to the rest of the app
-app.factory('loopsService', function() {
+app.factory('loopsService', function($firebaseObject) {
     //private variable loops, outside of return
   var loops = []
   return {
@@ -97,19 +100,46 @@ app.factory('loopsService', function() {
       return loops[index]
     }
   }
+    //var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/loops');
+    //return {
+    //getLoop: function(key) {
+      //return $firebaseObject(ref.child(key));
+    //}
+  //}
 })
 
 //create a loops factory with a get method
 app.factory('loopsFactory', ["$firebaseObject", function($firebaseObject) {
     //create a reference to the database node where we store data
-    var loops = new Firebase("https://vivid-heat-1234.firebaseio.com");
+    var ref = new Firebase("https://vivid-heat-1234.firebaseio.com/");
     
-    return function(loop) {
-        var loopRef = loops.child(loop);
+    return function(loop) { 
+        var loopRef = ref.child(loop);
         //return as a synchronized object
         return $firebaseObject(loopRef);
     };
 }])
+
+//create a userID service
+app.factory('userService', function() {
+    var userID = [];
+    
+    return {
+        userID: function() {
+        //obtain authenticated details
+        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        ref.onAuth(function(authData){
+        if (authData) {
+            var userID = authData.uid;
+            } else {
+            };
+        });
+            console.log(userID); //empty
+            return userID;
+            
+      }
+    };
+})
 
 app.controller('MainCtrl', function($scope) {
 // .fromTemplateUrl() method
@@ -121,7 +151,8 @@ app.controller('MainCtrl', function($scope) {
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, userService) {
+    
     //scope for left side tab delete
     $scope.data = {
         showDelete: false
@@ -177,21 +208,39 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             }
         });
     };
-    //function to add loop to list
+    ///-->attempt to log unique user ID in controller
+    $scope.uID = userService.userID();
+    console.log($scope.uID); // empty
+    
+    //function to add loop to list and save it to multiple locations in the database
     $scope.addLoop = function(newLoop) {
-        var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
-        //var loopRef = ref.child("loops");
-        ref.push({
-            name: newLoop
-    });
-        newLoop = '';
-        console.log(newLoop);
+        var root = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        var id = root.child("/loops").push();
+        id.set(newLoop, function(err) {
+            if(!err) {
+                var name = id.key();
+                root.child("/loops/" + id.key() +  "/name/").set(newLoop);
+                root.child("/members/" + id.key()).set(newLoop);
+                root.child("/events/" + id.key()).set(newLoop); 
+            }
+        });
     };
 })
 
-app.controller('loopCtrl', function($scope, loop, $ionicPopover) {
+app.controller('loopCtrl', function($scope, loop, $ionicPopover, $stateParams, loopsService) {
     $scope.loop = loop;
+    
+    //attempt to designate loop URL with unique ID
+    //var key = $stateParams.id;
+    //$scope.loop = loopsService.getLoop(key);
+    //var ref = new Firebase("https://vivid-heat-1234.firebaseio.com/loops");
+    //ref.once("value", function(snapshot) {
+        //var data = snapshot.val();
+        
+    //})
+    //initialize calendar view
     $scope.eventSources = [];
+    
     // from TemplateUrl() method
     $ionicPopover.fromTemplateUrl('loop-popover.html', {
         scope: $scope
@@ -200,45 +249,84 @@ app.controller('loopCtrl', function($scope, loop, $ionicPopover) {
     });
     //function to add event details to loops
     $scope.addEvent = function(eventName, eventDate, eventLocation) {
-      var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
-      var newRef = ref.child(key);
-      ref.push({
-            title: eventName,
-            date: eventDate,
-            location: eventLocation
-        });
-        eventName: '';
-        eventDate: '';
-        eventLocation: '';
-        console.log(eventName);
+      var root = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
+        root.child('uid').set(eventName);
+        
     };
 })
 
 
-app.controller('MyCalendarCtrl', function($scope, $ionicPopover) {
-    $scope.eventSources = [];
-        $ionicPopover.fromTemplateUrl('my-popover.html', {
-        scope: $scope
+app.controller('MyCalendarCtrl', ["$scope", "$timeout", "$ionicPopover", function($scope, $timeout, $ionicPopover) {
+    
+    $ionicPopover.fromTemplateUrl('my-popover.html', {
+    scope: $scope
     }).then(function(popover) {
         $scope.popover = popover;
     });
+    
+    $scope.name = [];
+    $scope.title = [];
+    $scope.date = [];
+    $scope.location = [];
+    
+    $scope.events = [{
+        title: 'Lunch',
+        start: '2016-02-07',
+        end: '2016-01-30',
+        allDay: false
+    }];
+        //$scope.eventSources = [$scope.events];
+
     //config calendar
     $scope.uiConfig = {
         calendar: {
             height: 350,
             editable: true,
-            events: {
-                url: 'https://vivid-heat-1234.firebaseio.com',
-                error: function() {
-                    alert('there was an error while fetching events!');
-                }
             },
         dayClick: $scope.alertEventOnClick,
         eventDrop: $scope.alertOnDrop,
         eventResize: $scope.alertOnResize
-      }
+      };
+    
+    $scope.loopRef = new Firebase("https://vivid-heat-1234.firebaseio.com/loops");
+    
+    $scope.saveData = function() {
+        $scope.loopRef.push({name: $scope.name.loopName, title:$scope.title.eventTitle, start:$scope.date.eventDate, location:$scope.location.eventLocation});
+        console.log($scope.name.loopName, $scope.title.eventTitle, $scope.date.eventDate);
+        $scope.name = "";
+        $scope.title = "";
+        $scope.date = "";
+        $scope.location = "";
     };
-})
+    
+    $scope.loopRef.on('value', function(allSnapshot) {
+        $timeout(function() {
+        allSnapshot.forEach(function(snapshot) {
+        
+            var key = snapshot.key();
+            var names = snapshot.child("name").val();
+            var event = snapshot.child("Events").val();
+            var titles = snapshot.child("Events/title").val();
+            var starts = snapshot.child("Events/start").val();
+            var allDay = snapshot.child("Events/allDay").val();
+            var sticks = snapshot.child("Events/stick").val();
+            //console.log(title);
+            $scope.events.push({ name:names, title:titles, start:starts, stick:sticks});
+            //console.log($scope.events);
+        });
+        });
+        //console.log($scope.events);
+    })
+    console.log($scope.events);
+    $scope.eventSources = [$scope.events];
+    //allLoopsSnapshot.forEach(function(loopSnapshot) {
+            //var key = loopSnapshot.key();
+            //var name = loopSnapshot.child("name").val();
+            //var date = loopSnapshot.child("start").val();
+            //var allDay = loopSnapshot.child("allDay").val();
+        //});
+    //});
+}])
 
 app.controller('SignInCtrl', function($scope, $state) {
 
@@ -254,7 +342,10 @@ app.controller('SignInCtrl', function($scope, $state) {
                 console.log("Error creating user:", error);
             } else {
                 console.log("Successfully created user account with uid:", userData.uid);
-            $state.go('app.loops.index');
+                ref.child("/users").child(userData.uid).set({
+                    name: $scope.data.email.replace(/@.*/, '')
+                });
+                $state.go('app.loops.index');
             }
         });
     };
@@ -269,8 +360,8 @@ app.controller('SignInCtrl', function($scope, $state) {
                 console.log("Login Failed!", error);
             } else {
                 console.log("Authenticated successfully with payload:", authData);
+                $state.go('app.loops.index');
             }
-            $state.go('app.loops.index');
         });
     };
 })

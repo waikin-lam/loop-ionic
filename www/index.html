@@ -107,15 +107,15 @@
               <div class="list">
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Event</span>
-                  <input type="text" placeholder="Dinner Gathering" ng-model="eventName">
+                  <input type="text" placeholder="Dinner Gathering" id="eventName" ng-model="eventName">
                 </label>
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Date(s)</span>  
-                  <input type="text" placeholder="01/02/2016" ng-model="eventDate">
+                  <input type="text" placeholder="01/02/2016" id="eventDate" ng-model="eventDate">
                 </label>
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Location</span>  
-                  <input type="text" placeholder="KLCC" ng-model="eventLocation">
+                  <input type="text" placeholder="KLCC" id="eventLocation" ng-model="eventLocation">
                 </label>
                 <!--<label class="item item-input item-stacked-label">
                   <span class="input-label">Loop </span>
@@ -161,27 +161,29 @@
               <h1 class="title">Add New Event</h1>
           </ion-header-bar>
             <ion-content>
+             <form ng-submit="saveData()">
               <div class="list">
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Event</span>
-                  <input type="text" id="event" placeholder="Dinner Gathering">
+                  <input type="text"  placeholder="Dinner Gathering" id="title" ng-model="title.eventTitle">
                 </label>
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Date(s)</span>  
-                  <input type="text" placeholder="01/02/2016">
+                  <input type="text" placeholder="01/02/2016" id="date" ng-model="date.eventDate">
                 </label>
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Location</span>  
-                  <input type="text" placeholder="KLCC">
+                  <input type="text" placeholder="KLCC" id="location" ng-model="location.eventLocation">
                 </label>
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Loop </span>
-                  <input type="text" placeholder="Buddies">
+                  <input type="text" placeholder="Buddies" id="name" ng-model="name.loopName">
                 </label>
             </div>
             <div class="item item-button center">
                 <button class="button button-block button-outline button-positive">Add Event</button>
             </div> 
+           </form>
           </ion-content>
         </ion-popover-view>
       </script>
@@ -193,7 +195,11 @@
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
           <ion-content>
-            <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
+              <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
+              <div ng-repeat="event in events">
+                <p>{{event.title}}{{event.start}}</p>
+                  <p>{{events|json}}</p>
+              </div>
           </ion-content>  
         </ion-view>
       </script>
@@ -210,7 +216,7 @@
                 <ion-list show-delete="data.showDelete">
                     <ion-item ng-repeat="(key, loop) in loops" class="item item-avatar" ui-sref="app.loops.detail({loop: $index})">
                     <span>{{ loop.name }}</span>
-                        <span>{{ loop.events }}</span>
+                        <span>{{ key }}</span>
                     <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(key)"></ion-delete-button>
                     <ion-option-button class="button-positive" ng-click="showConfirm()">Delete</ion-option-button>
                     </ion-item>
