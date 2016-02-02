@@ -120,7 +120,7 @@ app.factory('loopsFactory', ["$firebaseObject", function($firebaseObject) {
     };
 }])
 
-//create a userID service
+// (NOT USED) create a userID service
 app.factory('userService', function() {
     var userID = [];
     
@@ -128,9 +128,10 @@ app.factory('userService', function() {
         userID: function() {
         //obtain authenticated details
         var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
-        ref.onAuth(function(authData){
-        if (authData) {
-            var userID = authData.uid;
+        ref.onAuth(function(userData){
+        if (userData) {
+            var userID = userData.uid;
+            console.log(userID); //successful
             } else {
             };
         });
@@ -208,20 +209,33 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             }
         });
     };
-    ///-->attempt to log unique user ID in controller
-    $scope.uID = userService.userID();
-    console.log($scope.uID); // empty
     
     //function to add loop to list and save it to multiple locations in the database
     $scope.addLoop = function(newLoop) {
         var root = new Firebase("https://vivid-heat-1234.firebaseio.com");
-        var id = root.child("/loops").push();
-        id.set(newLoop, function(err) {
-            if(!err) {
-                var name = id.key();
-                root.child("/loops/" + id.key() +  "/name/").set(newLoop);
-                root.child("/members/" + id.key()).set(newLoop);
-                root.child("/events/" + id.key()).set(newLoop); 
+        var uid = {};
+        //retrieve user unique id from users node
+        var userData = root.getAuth();
+        var uid = userData.uid;
+        console.log(uid); //success!
+        
+        // an atomic update to various locations upon introduction of a new loop
+        // generate a new push ID for the new loop
+        var newLoopRef = root.child("/loops").push();
+        var newLoopKey = newLoopRef.key();
+        
+        // create the data we want to update
+        var newLoopName = {};
+        newLoopName["/loops/" + newLoopKey] = {
+            name: newLoop
+        };
+        root.child("members").child(newLoopKey).child(uid).set(true);
+        root.child("users").child(uid).child("loops").child(newLoopKey).set(true);
+        
+        // perform a deep-path update
+        root.update(newLoopName, function(error) {
+            if (error) {
+                console.log("Error updating data:", error)
             }
         });
     };
@@ -229,6 +243,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
 
 app.controller('loopCtrl', function($scope, loop, $ionicPopover, $stateParams, loopsService) {
     $scope.loop = loop;
+    console.log($stateParams);
     
     //attempt to designate loop URL with unique ID
     //var key = $stateParams.id;
@@ -249,7 +264,7 @@ app.controller('loopCtrl', function($scope, loop, $ionicPopover, $stateParams, l
     });
     //function to add event details to loops
     $scope.addEvent = function(eventName, eventDate, eventLocation) {
-      var root = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
+      var root = new Firebase('https://vivid-heat-1234.firebaseio.com');
         root.child('uid').set(eventName);
         
     };
@@ -341,11 +356,9 @@ app.controller('SignInCtrl', function($scope, $state) {
             if (error) {
                 console.log("Error creating user:", error);
             } else {
-                console.log("Successfully created user account with uid:", userData.uid);
-                ref.child("/users").child(userData.uid).set({
-                    name: $scope.data.email.replace(/@.*/, '')
-                });
-                $state.go('app.loops.index');
+                console.log("Successfully created user account with uid:", userData);
+                
+               //To alert successful signup and proceed to login (limited by username.uid apparent bug??) //$state.go('app.loops.index');
             }
         });
     };
@@ -355,11 +368,15 @@ app.controller('SignInCtrl', function($scope, $state) {
         
         ref.authWithPassword({
             email: $scope.data.email,
-            password: $scope.data.password }, function(error, authData) {
+            password: $scope.data.password }, function(error, userData) {
             if (error) {
                 console.log("Login Failed!", error);
             } else {
-                console.log("Authenticated successfully with payload:", authData);
+                console.log("Authenticated successfully with payload:", userData);
+                ref.child("/users").child(userData.uid).set({
+                    name: $scope.data.email.replace(/@.*/, '')
+                });
+                
                 $state.go('app.loops.index');
             }
         });
