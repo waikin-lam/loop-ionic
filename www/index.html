@@ -5,12 +5,9 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
     <title></title>
 
-    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
 
-    <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <!-- compiled css output -->
     <link href="css/ionic.app.css" rel="stylesheet">
-    -->
      <link rel="stylesheet" href="lib/fullcalendar/dist/fullcalendar.css"/>
 
     <!-- ionic/angularjs js -->
@@ -76,9 +73,9 @@
             <ion-nav-view name="mycalendar"></ion-nav-view>
           </ion-tab>
           
-          <ion-tab title="Loopers" icon="tabs-icon-top ion-person" ui-sref="#">
+          <!--<ion-tab title="Loopers" icon="tabs-icon-top ion-person" ui-sref="#">
             <ion-nav-view name="#"></ion-nav-view>
-          </ion-tab>
+          </ion-tab> -->
             
           <ion-tab title="Loops" icon="ion-ios-loop-strong" ui-sref="app.loops">
             <ion-nav-view name="loops"></ion-nav-view>
@@ -214,9 +211,10 @@
           </ion-nav-buttons>
           <ion-content>
                 <ion-list show-delete="data.showDelete">
-                    <ion-item ng-repeat="(key, loop) in loops" class="item item-avatar" ui-sref="app.loops.detail({loop: $index})">
+                    <ion-item ng-repeat="(key, loop) in loops" class="item item-avatar" href="#/loops/{{key}}">
                     <span>{{ loop.name }}</span>
-                        <span>{{ key }}</span>
+                        <!--ui-sref="app.loops.detail({loop: $id})"-->
+                        <!-- <span>{{ key }}</span> -->
                     <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(key)"></ion-delete-button>
                     <ion-option-button class="button-positive" ng-click="showConfirm()">Delete</ion-option-button>
                     </ion-item>
@@ -227,12 +225,12 @@
       
       <script type="text/ng-template" id="loop.html">
             <ion-view hide-tab-bar>
-              <ion-nav-title>To insert title</ion-nav-title>
+              <ion-nav-title>{{title}}</ion-nav-title>
                 <ion-nav-buttons side="secondary">
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
             <ion-content>
-                <div ui-calendar ng-model="eventSources"></div>
+                <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
                 <div class="item item-checkbox">
                     <div>
                         <label class="checkbox">
