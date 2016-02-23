@@ -31,6 +31,9 @@
       
       <!-- AngularFire -->
       <script src="lib/angularfire/dist/angularfire.min.js"></script>
+      
+      <!-- checklist-model -->
+      <!--<script src="lib/checklist-model/checklist-model.js"></script> -->
    
     <!-- your app's js -->
     <script src="js/app.js"></script>
@@ -72,10 +75,6 @@
           <ion-tab title="My Calendar" icon="tabs-icon-top ion-calendar" ui-sref="app.mycalendar">
             <ion-nav-view name="mycalendar"></ion-nav-view>
           </ion-tab>
-          
-          <!--<ion-tab title="Loopers" icon="tabs-icon-top ion-person" ui-sref="#">
-            <ion-nav-view name="#"></ion-nav-view>
-          </ion-tab> -->
             
           <ion-tab title="Loops" icon="ion-ios-loop-strong" ui-sref="app.loops">
             <ion-nav-view name="loops"></ion-nav-view>
@@ -107,8 +106,8 @@
                   <input type="text" placeholder="Dinner Gathering" id="eventName" ng-model="eventName">
                 </label>
                 <label class="item item-input item-stacked-label">
-                  <span class="input-label">Date(s)</span>  
-                  <input type="text" placeholder="01/02/2016" id="eventDate" ng-model="eventDate">
+                  <span class="input-label">Date & Time</span>  
+                  <input type="datetime-local" placeholder= "yyyy-MM-ddTHH:mm:ss" id="eventDate" ng-model="eventDate">
                 </label>
                 <label class="item item-input item-stacked-label">
                   <span class="input-label">Location</span>  
@@ -118,9 +117,9 @@
                   <span class="input-label">Loop </span>
                   <input type="text" placeholder="Buddies">
                 </label> -->
-            </div>
             <div class="item item-button center">
                 <button class="button button-block button-outline button-positive">Add Event</button>
+            </div>
             </div>
            </form>
           </ion-content>
@@ -151,36 +150,21 @@
       </script>
       <!-- end of script for popover form -->
       
-      <!-- script for Add Event popover form input in My Calendar -->
+      <!-- script for Filter popover form input in My Calendar -->
       <script type="text/ng-template" id="my-popover.html">
         <ion-popover-view>
           <ion-header-bar>
-              <h1 class="title">Add New Event</h1>
+              <h1 class="title">Filter Events by Loop</h1>
           </ion-header-bar>
             <ion-content>
-             <form ng-submit="saveData()">
-              <div class="list">
-                <label class="item item-input item-stacked-label">
-                  <span class="input-label">Event</span>
-                  <input type="text"  placeholder="Dinner Gathering" id="title" ng-model="title.eventTitle">
-                </label>
-                <label class="item item-input item-stacked-label">
-                  <span class="input-label">Date(s)</span>  
-                  <input type="text" placeholder="01/02/2016" id="date" ng-model="date.eventDate">
-                </label>
-                <label class="item item-input item-stacked-label">
-                  <span class="input-label">Location</span>  
-                  <input type="text" placeholder="KLCC" id="location" ng-model="location.eventLocation">
-                </label>
-                <label class="item item-input item-stacked-label">
-                  <span class="input-label">Loop </span>
-                  <input type="text" placeholder="Buddies" id="name" ng-model="name.loopName">
-                </label>
-            </div>
-            <div class="item item-button center">
-                <button class="button button-block button-outline button-positive">Add Event</button>
-            </div> 
-           </form>
+                <ion-checkbox ng-repeat="(key, loop) in loops" ng-model="loop.checked" ng-checked="loop.checked" ng-init="loop.checked=false" value={{key}} name="selectedLoops[]">{{loop.name}}
+                <!--<ion-checkbox ng-repeat="(key, loop) in loops" data-checklist-model="selectedLoop.keys" data-checklist-value="key">{{loop.name}}-->
+                </ion-checkbox>
+                <!--<div class="item item-button center">
+                    <button class="button button-block button-outline button-positive" type="submit" ng-click="isChecked()">
+                    Filter</button>
+                </div>-->
+                <pre ng-bind="loops | json"></pre>
           </ion-content>
         </ion-popover-view>
       </script>
@@ -189,14 +173,10 @@
       <script type="text/ng-template" id="mycalendar.html">
         <ion-view title="My Calendar">
             <ion-nav-buttons side="secondary">
-            <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
+            <button class="button button-clear ion-navicon-round" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
           <ion-content>
               <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
-              <div ng-repeat="event in events">
-                <p>{{event.title}}{{event.start}}</p>
-                  <p>{{events|json}}</p>
-              </div>
           </ion-content>  
         </ion-view>
       </script>
@@ -212,9 +192,8 @@
           <ion-content>
                 <ion-list show-delete="data.showDelete">
                     <ion-item ng-repeat="(key, loop) in loops" class="item item-avatar" href="#/loops/{{key}}">
-                    <span>{{ loop.name }}</span>
-                        <!--ui-sref="app.loops.detail({loop: $id})"-->
-                        <!-- <span>{{ key }}</span> -->
+                    <span>{{ loop.name }}</span><br>
+                        <!--<span>next event</span>-->
                     <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(key)"></ion-delete-button>
                     <ion-option-button class="button-positive" ng-click="showConfirm()">Delete</ion-option-button>
                     </ion-item>
@@ -225,20 +204,28 @@
       
       <script type="text/ng-template" id="loop.html">
             <ion-view hide-tab-bar>
-              <ion-nav-title>{{title}}</ion-nav-title>
+              <ion-nav-title>{{title.join(", ")}}</ion-nav-title>
                 <ion-nav-buttons side="secondary">
+            <button class="button button-clear ion-person-add" ng-click=""></button>
+                    <span></span>
+                    <span></span>
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
             <ion-content>
                 <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
-                <div class="item item-checkbox">
-                    <div>
-                        <label class="checkbox">
-                            <input type="checkbox" ng-model="loop.done">
-                        </label>
-                        Done
+                <!--Insert day view -->
+                <ion-list class="list">
+                    <div class="item item-divider">
+                        {{todaysDate.join(", ")}}
                     </div>
-                </div>
+                    <ion-item class="item" ng-repeat="event in eventsByDate">
+                        <span>{{event.time}}</span>
+                        <span>{{event.title}}</span>
+                        <span>@ {{event.location}}</span>
+                        <ion-option-button class="button-positive" ng-click="openModal(event, $index)">Edit</ion-option-button>
+                        <ion-option-button class="button-assertive" ng-click="showConfirm(event, $index)">Delete</ion-option-button>
+                    </ion-item>
+                </ion-list>
             </ion-content>
           </ion-view>
       </script>
@@ -259,5 +246,36 @@
         </ion-content>
         </ion-view>
       </script>
+      
+      <!-- script for edit modal in Loop view -->
+      <script type="text/ng-template" id="edit-modal.html">
+        <ion-modal-view>
+            <ion-header-bar>
+                <h1 class="title">Edit Event</h1>
+                <button class="button" ng-click="closeModal()">X</button>
+            </ion-header-bar>
+            <ion-content>
+                <!--contents of modal -->
+                <form ng-submit="updateEvent(updateTitle, updateDateTime, updateLocation)">
+                <div class="list">
+                    <label class="item item-input item-stacked-label">
+                        <span class="input-label">Event Title</span>
+                        <input type="text" placeholder="" ng-model="updateTitle">
+                    </label>
+                    <label class="item item-input item-stacked-label">
+                        <span class="input-label">Date & Time</span>
+                        <input type="datetime-local" placeholder="" ng-model="updateDateTime">
+                    </label>
+                    <label class="item item-input item-stacked-label">
+                        <span class="input-label">Location</span>
+                        <input type="text" placeholder="" ng-model="updateLocation">
+                    </label>
+                    <button class="button button-block button-positive" ng-click="closeModal()">Update</button>
+                </div>
+                </form>
+            </ion-content>
+        </ion-modal-view>
+      </script>
+      
     </body>
 </html>

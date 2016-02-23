@@ -257,7 +257,8 @@ angular.module('ui.calendar', [])
           calendar.fullCalendar(options);
           if(attrs.calendar) {
             uiCalendarConfig.calendars[attrs.calendar] = calendar;
-          }          
+          }
+            //window.calendar = calendar;
         };
 
         eventSourcesWatcher.onAdded = function(source) {
