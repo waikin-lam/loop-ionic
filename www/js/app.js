@@ -37,7 +37,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('app.loops', {
         // abstract state will never be directly be activated but provides inherited properties to its common children states.
         abstract: true,
-        cache: false,
+        //cache: false,
         url: '/loops',
         // views property sets up multiple views within a single state.
         views: {
@@ -143,16 +143,17 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     }).then(function(popover) {
         $scope.popover = popover;
     });
+    
+    var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
+    
+    var uid = {};
+    //retrieve user unique id from users node
+    var userData = ref.getAuth();
+    var uid = userData.uid;
+    console.log(uid); //success!
+    
     //scope onItemDelete minus tab on nav-bar, with popup confirm
     $scope.onItemDelete = function(key) {
-       var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
-        
-        var uid = {};
-        //retrieve user unique id from users node
-        var userData = ref.getAuth();
-        var uid = userData.uid;
-        //console.log(uid); //success!
-        
         var loopKey = ref.child('/loops').child(key);
         var member = ref.child('/members').child(key);
         var user = ref.child('/users').child(uid).child('/loops').child(key);
@@ -178,12 +179,9 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 }
         });
     }
-    //function to splice loop array (TO REDESIGN THIS ELEMENT)
-    $scope.DeleteLoop = function(loop) {  
- $scope.loops.splice($scope.loops.indexOf(loop), 1);
-    };
+    //function to splice loop array with option button(TO REDESIGN THIS ELEMENT)
     //showConfirm popup to delete loop
-    $scope.showConfirm = function() {
+    $scope.showConfirm = function(key) {
         var confirmPopup = $ionicPopup.confirm({
             title: 'Delete Loop',
             template: 'Are you sure you want to close this loop?',
@@ -194,7 +192,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         });
         confirmPopup.then(function(res) {
             if(res) {
-                $scope.DeleteLoop(); //does not delete the correct loop yet!
+                //to delete loop and associated data linkages
             } else {
                 //revert back, no action
             }
@@ -514,9 +512,9 @@ app.controller('SignInCtrl', function($scope, $state) {
                 console.log("Login Failed!", error);
             } else {
                 console.log("Authenticated successfully with payload:", userData);
-                ref.child("/users").child(userData.uid).set({
-                    name: $scope.data.email.replace(/@.*/, '')
-                });
+                //ref.child("/users").child(userData.uid).set({
+                    //name: $scope.data.email.replace(/@.*/, '')
+                //});
                 
                 $state.go('app.loops.index');
             }
