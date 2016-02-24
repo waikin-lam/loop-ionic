@@ -182,6 +182,11 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     //function to splice loop array with option button(TO REDESIGN THIS ELEMENT)
     //showConfirm popup to delete loop
     $scope.showConfirm = function(key) {
+        var loopKey = ref.child('/loops').child(key);
+        var member = ref.child('/members').child(key);
+        var user = ref.child('/users').child(uid).child('/loops').child(key);
+        var events = ref.child('/events').child(key);
+        
         var confirmPopup = $ionicPopup.confirm({
             title: 'Delete Loop',
             template: 'Are you sure you want to close this loop?',
@@ -190,9 +195,14 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             okText: 'Yes',
             okType: 'button-positive'
         });
+        console.log(key);
         confirmPopup.then(function(res) {
             if(res) {
                 //to delete loop and associated data linkages
+                loopKey.remove();
+                member.remove();
+                user.remove();
+                events.remove()
             } else {
                 //revert back, no action
             }
