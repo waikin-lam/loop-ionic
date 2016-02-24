@@ -130,7 +130,7 @@ app.controller('MainCtrl', function($scope) {
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate) {
     $scope.loops = loopsFactory.getLoops();
     
     //scope for left side tab delete
@@ -175,11 +175,45 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 events.remove()
             } else
                 {
-                    
+                    //Do nothing
                 }
         });
     }
-    //function to splice loop array with option button(TO REDESIGN THIS ELEMENT)
+    //Edit popup
+    $scope.editPopup = function(key) {
+        $scope.edit = {};
+        
+        var editNamePopup = $ionicPopup.show({
+            template: '<input type="name" ng-model="edit.name">',
+            title: 'Edit Name of Loop',
+            scope: $scope,
+            buttons: [
+                {text: 'Cancel'},
+                {
+                    text: '<b>Save</b>',
+                    type: 'button-positive',
+                    onTap: function(e) {
+                        if(!$scope.edit.name) {
+                            //don't allow the user to close unless he enters new loop name
+                            e.preventDefault();
+                        } else {
+                            return $scope.edit.name;
+                            
+                        }
+                    }
+                }
+            ]
+        });
+        
+        editNamePopup.then(function(res) {
+            //console.log('Tapped!', res);
+            var loopName = ref.child('/loops').child(key).child('name');
+            loopName.set(res);
+            $ionicListDelegate.closeOptionButtons();
+        })
+    }
+    
+    //function to splice loop array with option button
     //showConfirm popup to delete loop
     $scope.showConfirm = function(key) {
         var loopKey = ref.child('/loops').child(key);
@@ -204,7 +238,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 user.remove();
                 events.remove()
             } else {
-                //revert back, no action
+                $ionicListDelegate.closeOptionButtons();
             }
         });
     }
@@ -252,7 +286,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     };
 })
 
-app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject) {
+app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject, $ionicListDelegate) {
     // UI router: push key() as URL
     var loopId = $stateParams.key;
     //console.log(loopId); //success
@@ -270,7 +304,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
               
               return true;
           }  else {
-              console.log("error pushing title into variable");
+              //console.log("error pushing title into variable");
               }
         })
       })
@@ -435,6 +469,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     };
     $scope.closeModal = function() {
         $scope.modal.hide();
+        $ionicListDelegate.closeOptionButtons();
     };
     
     //showConfirm function for popup to delete event
@@ -452,6 +487,8 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                     ref.remove();
                     //update $scope.eventsByDate to delete $index item from ng-repeat list in view
                     $scope.eventsByDate.splice($index, 1);
+                } else {
+                    $ionicListDelegate.closeOptionButtons();
                 }
             })
         }
