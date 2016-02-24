@@ -208,6 +208,17 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         var uid = userData.uid;
         //console.log(uid); //success!
         
+        //generate random color for individual loop
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF'.split('');
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+        var color = getRandomColor();
+        
         // an atomic update to various locations upon introduction of a new loop
         // generate a new push ID for the new loop
         var newLoopRef = root.child("/loops").push();
@@ -216,10 +227,11 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         // create the data we want to update
         var newLoopName = {};
         newLoopName["/loops/" + newLoopKey] = {
-            name: newLoop
+            name: newLoop,
+            color: color
         };
         root.child("members").child(newLoopKey).child(uid).set(true);
-        root.child("users").child(uid).child("loops").child(newLoopKey).set(true);
+        root.child("users").child(uid).child("loops").child(newLoopKey).set(true); 
         
         // perform a deep-path update
         root.update(newLoopName, function(error) {
@@ -230,7 +242,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     };
 })
 
-app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray) {
+app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject) {
     // UI router: push key() as URL
     var loopId = $stateParams.key;
     //console.log(loopId); //success
@@ -261,7 +273,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     var events = new Firebase('https://vivid-heat-1234.firebaseio.com/events/' + loopId);
     var sortEvents = events.orderByChild("start");
     $scope.events = $firebaseArray(sortEvents);
-    //console.log($scope.events);
+    console.log($scope.events);
     
     //$scope to initialize calendar
     $scope.eventSources = [$scope.events];
@@ -361,16 +373,24 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     
     //function to add event details to loop in Firebase
     $scope.addEvent = function(eventName, eventDate, eventLocation) {
-        var datetime = eventDate.toISOString();
-        //an atomic update to various locations upon introduction of a new event
-        $scope.events.$add({
-            title: eventName,
-            start: datetime,
-            stick: true,
-            location: eventLocation,
-            allDay: false
-        });
-        //sort array of objects for view to show events in chronological order
+        //extract color from /loops tree
+        var colorRef = new Firebase("https://vivid-heat-1234.firebaseio.com/loops/" + loopId);
+        var color = colorRef.on("value", function(data) {
+            var loopColor = data.val();
+            console.log(loopColor.color);
+        
+            var datetime = eventDate.toISOString();
+            //an atomic update to various locations upon introduction of a new event
+            $scope.events.$add({
+                title: eventName,
+                start: datetime,
+                stick: true,
+                location: eventLocation,
+                allDay: false,
+                color: loopColor.color
+            })
+            //sort array of objects for view to show events in chronological order
+        })
         
         //re-up calendar with added event
         $scope.eventSources = [$scope.events];
@@ -472,7 +492,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 eventData.on("child_added", function(allEventsSnapshot) {
                     var allEventData = allEventsSnapshot.val();
                     //console.log(allEventData); //successful in retrieving loopIds
-                    $scope.allEvents.push({title:allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay})
+                    $scope.allEvents.push({title:allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color})
                 })
             })
         })
@@ -512,10 +532,6 @@ app.controller('SignInCtrl', function($scope, $state) {
                 console.log("Login Failed!", error);
             } else {
                 console.log("Authenticated successfully with payload:", userData);
-                //ref.child("/users").child(userData.uid).set({
-                    //name: $scope.data.email.replace(/@.*/, '')
-                //});
-                
                 $state.go('app.loops.index');
             }
         });
