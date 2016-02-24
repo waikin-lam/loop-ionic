@@ -188,17 +188,18 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             title: 'Edit Name of Loop',
             scope: $scope,
             buttons: [
-                {text: 'Cancel'},
+                { text: 'Cancel',
+                  onTap: $ionicListDelegate.closeOptionButtons()
+                },
                 {
-                    text: '<b>Save</b>',
-                    type: 'button-positive',
-                    onTap: function(e) {
-                        if(!$scope.edit.name) {
-                            //don't allow the user to close unless he enters new loop name
-                            e.preventDefault();
-                        } else {
-                            return $scope.edit.name;
-                            
+                  text: '<b>Save</b>',
+                  type: 'button-positive',
+                  onTap: function(e) {
+                    if(!$scope.edit.name) {
+                    //don't allow the user to close unless he enters new loop name
+                        e.preventDefault();
+                    } else {
+                        return $scope.edit.name;    
                         }
                     }
                 }
@@ -207,9 +208,13 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         
         editNamePopup.then(function(res) {
             //console.log('Tapped!', res);
-            var loopName = ref.child('/loops').child(key).child('name');
-            loopName.set(res);
-            $ionicListDelegate.closeOptionButtons();
+            if (res != null) {
+                var loopName = ref.child('/loops').child(key).child('name');
+                loopName.set(res);
+                $ionicListDelegate.closeOptionButtons();
+            } else {
+                //do nothing
+            }
         })
     }
     
