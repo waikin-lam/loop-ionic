@@ -71,11 +71,12 @@ app.config(function($stateProvider, $urlRouterProvider) {
         //}
     })
     
-$stateProvider.state('app.help', {
-        url: '/help',
+$stateProvider.state('app.follow', {
+        url: '/follow',
         views: {
-            help: {
-            templateUrl: 'help.html'
+            follow: {
+                templateUrl: 'follow.html',
+                controller: 'FollowCtrl'
             }
         }
     })
@@ -333,7 +334,8 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     //calendar configuration
     $scope.uiConfig = {
         calendar: {
-            height: 350,
+            fixedWeekCount: false,
+            contentHeight: "auto",
             editable: true,
             eventDrop: function(event, delta, revertFunc) {
                 alert(event.title + " was dropped on " + event.start.format());
@@ -407,10 +409,13 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 left: 'prev',
                 center: 'title',
                 right: 'next'
+            },
+            eventRender: function(event, element, view) {
+                element.qtip({
+                    content: event.title
+                });
             }
         },
-        eventDrop: $scope.alertOnDrop,
-        eventResize: $scope.alertResize, 
     },
     
     // from TemplateUrl() method
@@ -499,11 +504,11 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         }
 })
 
-app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "filterFilter", function($scope, $ionicPopover, $timeout, loopsFactory, filterFilter) {
+app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig) {
 
     //initialize loops for filter view
     $scope.loops = loopsFactory.getLoops();
-    
+                                  
     //initialize scope for consolidated Events
     $scope.allEvents =[];
     
@@ -517,6 +522,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     $scope.uiConfig = {
         calendar: {
             //height: 350,
+            fixedWeekCount: false,
             editable: false,
             timezone: 'local',
             firstDay: 1,
@@ -524,15 +530,19 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 left: 'prev',
                 center: 'title',
                 right: 'next'
-            }
             },
-        dayClick: $scope.alertEventOnClick,
-        eventDrop: $scope.alertOnDrop,
-        eventResize: $scope.alertOnResize
-      };
-    
-    //method to filter events by loop
-    
+            eventRender: function eventRender(event, element,view) {
+                //jquery qtip functionality to highlight event title
+                element.qtip({
+                    content: event.title
+                });
+                //if (event.key === "-K9zc2gTVn80VSRPtwfT") {
+                    //return false
+                //} // works
+                //return display;
+            },
+         },
+    };
     
     var allEventsRoot = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
     allEventsRoot.on("value", function (allSnapshot){
@@ -544,14 +554,143 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 eventData.on("child_added", function(allEventsSnapshot) {
                     var allEventData = allEventsSnapshot.val();
                     //console.log(allEventData); //successful in retrieving loopIds
-                    $scope.allEvents.push({title:allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color})
+                    $scope.allEvents.push({title:allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key})
                 })
             })
+            console.log($scope.allEvents);
         })
     })
     //initialize calendar view
     $scope.eventSources = [$scope.allEvents];
-    //window.calendar.fullCalendar('refetchEvents');
+    
+    //initialize filter: pushing loop key into array when unchecked and removing key from array when checked
+    var loopsToHide = [];
+    var loopsToHideIndex = [];
+    var reloadEvents = [];
+    var loopsToShow = [];
+    
+    $scope.uncheck = function uncheck(key) {
+        var index = loopsToHide.indexOf(key);
+        if (index >= 0) { //key present in $scope.loopsToHide hence to re-introduce events into $scope.allEvents
+            reloadEvents.length = 0;
+            loopsToShow.length = 0;            loopsToHide.splice(index, 1);
+            console.log(loopsToHide);
+            //recall $scope.allEvents from Firebase
+            allEventsRoot.on("value", function (allSnapshot){
+            $timeout(function(){
+                allSnapshot.forEach(function(childSnapshot) {
+                    var key = childSnapshot.key();
+                    //console.log(key);
+                    var eventData = allEventsRoot.child(key);
+                    eventData.on("child_added", function(allEventsSnapshot) {
+                        var allEventData = allEventsSnapshot.val();
+                        reloadEvents.push({title:allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key})
+                        })
+                    })
+                console.log(reloadEvents);
+                //isolate relevant events in [reloadEvents] with key
+                console.log(key);
+                for (var i=0; i < reloadEvents.length; i++) {
+                    if(key === reloadEvents[i].key) {
+                        loopsToShow.push(reloadEvents[i]);
+                        }
+                    }
+                console.log(loopsToShow);
+                for (var i=0; i < loopsToShow.length; i++) {
+                    var index = $scope.allEvents.indexOf(loopsToShow[i]);
+                    if (index = -1) {
+                        $scope.allEvents.push(loopsToShow[i]);
+                    }
+                }
+                console.log($scope.allEvents);
+                })
+            })
+            
+            
+            
+        } else {
+            loopsToHide.push(key);
+            console.log(loopsToHide);
+            //take key from loopsToHide and iterate through $scope.allEvents to remove events that have keys equal to the key
+            angular.forEach(loopsToHide, function (value, key) {
+                console.log(value);
+                for (var i=0; i<$scope.allEvents.length; i++) {
+                    if (value === $scope.allEvents[i].key) {
+                        var index1 = $scope.allEvents.indexOf($scope.allEvents[i]);
+                        console.log(index1);
+                        if (loopsToHideIndex.indexOf(index1) >= 0) {
+                            //Do nothing as [loopsToHideIndex] already contains index1
+                        } else { //otherwise, push index1 into [loopsToHideIndex]
+                            loopsToHideIndex.push(index1);
+                            console.log(loopsToHideIndex);
+                        }
+                    }
+                }
+            })
+            //use [loopsToHideIndex] to alter $scope.allEvents
+            loopsToHideIndex.sort(function(a,b){return a-b; }); //arrange index by descending order
+            console.log(loopsToHideIndex);
+            for (var i = loopsToHideIndex.length-1; i>=0; i--) {
+                $scope.allEvents.splice(loopsToHideIndex[i], 1);
+            }
+            loopsToHideIndex.length = 0;
+        }
+    }
+    
+    //initialize filter: pushing loop key into array when selected and removing loop key from array when deselected
+    /*$scope.selectedLoop = []; //initialize empty loop
+    $scope.filteredEvents = [];//trial empty loop for filtering
+    
+    $scope.toggleSelection = function toggleSelection(key) {
+        var index = $scope.selectedLoop.indexOf(key);
+        console.log($scope.selectedLoop);
+        if (index >= 0) {
+            $scope.selectedLoop.splice(index, 1);
+            //approach: take unchecked key removed from $scope.selectedLoop to iterate through $scope.filteredEvents to remove events that have keys equal to the removed key
+            console.log($scope.selectedLoop);
+            $scope.filteredEvents.length = 0; //reset array and push events with key(s) left in $scope.selectedLoop
+            angular.forEach($scope.selectedLoop, function (value,key) {
+                for (var i=0; i<$scope.allEvents.length; i++) {
+                    if (value === $scope.allEvents[i].key) {
+                        var index1 = $scope.filteredEvents.indexOf($scope.allEvents[i]);
+                        console.log(index1);
+                        if (index1 >= 0) {
+                            $scope.filteredEvents.splice(index1,1);
+                        } else {
+                            $scope.filteredEvents.push($scope.allEvents[i]);
+                        }
+                        console.log($scope.filteredEvents);
+                    }
+                }
+            })
+        } else {
+            //approach: for every key in $scope.selectedLoop, to iterate through $scope.allEvents and isolate events that have keys equal to the key in $scope.selectedLoop
+            $scope.selectedLoop.push(key);
+            console.log($scope.selectedLoop);
+            angular.forEach($scope.selectedLoop, function (value,key) {
+            console.log(value);
+            for(var i=0; i<$scope.allEvents.length; i++) {
+                if (value === $scope.allEvents[i].key) {
+                    console.log($scope.allEvents[i]);
+                    var index1 = $scope.filteredEvents.indexOf($scope.allEvents[i]);
+                    console.log(index1);
+                    if(index1 >= 0) {
+                        //$scope.filteredEvents.splice(index1,1);
+                    } else {
+                        $scope.filteredEvents.push($scope.allEvents[i]);
+                    }
+                console.log($scope.filteredEvents);
+                }
+            }
+        })
+        }
+        console.log($scope.filteredEvents);
+        //$scope.allEvents.splice(0, $scope.allEvents.length);
+        //$scope.allEvents = $scope.filteredEvents;
+        //console.log($scope.allEvents);
+        //rerender events to show only the filtered events on the calendar
+        
+    };*/
 }])
 
 app.controller('SignInCtrl', function($scope, $state) {
@@ -588,6 +727,11 @@ app.controller('SignInCtrl', function($scope, $state) {
             }
         });
     };
+})
+
+//controller for follow tab
+app.controller('FollowCtrl', function($scope) {
+    
 })
 
 //controller for settings tab

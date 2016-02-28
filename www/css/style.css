@@ -14,6 +14,16 @@
     position: relative;
 }
 
+/* fullCalendar to fix header position */
+
+.fc-header {
+    position: fixed;
+}
+
+.fc-first .fc-last {
+    position: fixed;
+}
+
 /* Custom directive to hide tab bar in the Loop view */
 .tabs-top .tab-nav {
   -webkit-transition-timing-function: cubic-bezier(0.4, 0.6, 0.2, 1);

@@ -8,7 +8,8 @@
 
     <!-- compiled css output -->
     <link href="css/ionic.app.css" rel="stylesheet">
-     <link rel="stylesheet" href="lib/fullcalendar/dist/fullcalendar.css"/>
+      <link rel="stylesheet" href="lib/fullcalendar/dist/fullcalendar.css"/>
+      <link rel="stylesheet" href="lib/qtip2/jquery.qtip.min.css">
 
     <!-- ionic/angularjs js -->
     <script src="lib/ionic/js/ionic.bundle.js"></script>
@@ -25,6 +26,7 @@
       <script type="text/javascript" src="lib/fullcalendar/dist/gcal.js"></script>
       <!-- jquery mousewheel plugin -->
       <script type="text/javascript" src="lib/jquery-mousewheel/jquery.mousewheel.js"></script>
+      <script type="text/javascript" src="lib/qtip2/jquery.qtip.min.js"></script>
       
       <!--Firebase -->
       <script src="lib/firebase/firebase.js"></script>
@@ -33,7 +35,7 @@
       <script src="lib/angularfire/dist/angularfire.min.js"></script>
       
       <!-- checklist-model -->
-      <!--<script src="lib/checklist-model/checklist-model.js"></script> -->
+      <script src="lib/checklist-model/checklist-model.js"></script>
       
       <!-- your app's js -->
       <script src="js/app.js"></script>
@@ -82,8 +84,8 @@
             
             <!-- ui-sref is a directive that binds a link to a state -->
             
-          <ion-tab title="Follow" icon="ion-arrow-swap" ui-sref="app.help">
-            <ion-nav-view name="help"></ion-nav-view>
+          <ion-tab title="Follow" icon="ion-arrow-swap" ui-sref="app.follow">
+            <ion-nav-view name="follow"></ion-nav-view>
           </ion-tab>
           
           <ion-tab title="Settings" icon="ion-gear-a" ui-sref="app.settings">
@@ -154,17 +156,24 @@
       <script type="text/ng-template" id="my-popover.html">
         <ion-popover-view>
           <ion-header-bar>
-              <h1 class="title">Filter Events by Loop</h1>
+              <h1 class="title">Hide Loop Events</h1>
           </ion-header-bar>
             <ion-content>
-                <ion-checkbox ng-repeat="(key, loop) in loops" ng-model="loop.checked" ng-checked="loop.checked" ng-init="loop.checked=false" value={{key}} name="selectedLoops[]">{{loop.name}}
-                <!--<ion-checkbox ng-repeat="(key, loop) in loops" data-checklist-model="selectedLoop.keys" data-checklist-value="key">{{loop.name}}-->
+                <!--<ion-checkbox ng-repeat="(key,loop) in loops" ng-model="ids[key]" value="{{key}}" name="selectedLoops[]" ng-init="ids[key]=true">{{loop.name}}
+                </ion-checkbox>
+                <div>{{ids}}</div>-->
+                <!--<ion-checkbox ng-repeat="(key, loop) in loops" name="selectedLoops[]" value="{{key}}" ng-click="toggleSelection(key)">{{loop.name}}
+                </ion-checkbox>-->
+                <!--<ion-checkbox ng-repeat="(key, loop) in loops" name="filter" data-type={{key}}>
+                {{loop.name}}
+                </ion-checkbox>-->
+                <ion-checkbox ng-repeat="(key, loop) in loops" name="uncheckedLoops[]" value="{{key}}" ng-click="uncheck(key)">{{loop.name}}
                 </ion-checkbox>
                 <!--<div class="item item-button center">
                     <button class="button button-block button-outline button-positive" type="submit" ng-click="isChecked()">
                     Filter</button>
                 </div>-->
-                <pre ng-bind="loops | json"></pre>
+                <!--<pre ng-bind="loops | json"></pre>-->
           </ion-content>
         </ion-popover-view>
       </script>
@@ -176,7 +185,7 @@
             <button class="button button-clear ion-navicon-round" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
           <ion-content>
-              <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
+              <div ui-calendar="uiConfig.calendar" calendar="myCalendar" ng-model="eventSources"></div>
           </ion-content>  
         </ion-view>
       </script>
@@ -217,7 +226,7 @@
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
             <ion-content>
-                <div ui-calendar="uiConfig.calendar" ng-model="eventSources"></div>
+                <div class="calendar" ui-calendar="uiConfig.calendar" ng-model="eventSources" calendar="myCalendar"></div>
                 <!--Insert day view -->
                 <ion-list class="list">
                     <div class="item item-divider">
@@ -235,14 +244,17 @@
           </ion-view>
       </script>
 
-      <script type="text/ng-template" id="help.html">
-  <ion-view title="Home">
-    <ion-content padding="true">
-       <h2>Using the app</h2>
-       <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facilis architecto hic officia quasi excepturi sequi deleniti maiores consectetur veritatis sint?</p>
-    </ion-content>
-  </ion-view>
-</script>
+      <script type="text/ng-template" id="follow.html">
+        <ion-view title="Follow">
+            <ion-content>
+                <div class="list">
+                    <a class="item item-thumbnail-left" href="#">
+                        
+                    </a>
+                </div>
+            </ion-content>
+        </ion-view>
+      </script>
       
       <script type="text/ng-template" id="settings.html">
         <ion-view title="Settings">
