@@ -536,10 +536,6 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 element.qtip({
                     content: event.title
                 });
-                //if (event.key === "-K9zc2gTVn80VSRPtwfT") {
-                    //return false
-                //} // works
-                //return display;
             },
          },
     };
@@ -636,64 +632,9 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             loopsToHideIndex.length = 0;
         }
     }
-    
-    //initialize filter: pushing loop key into array when selected and removing loop key from array when deselected
-    /*$scope.selectedLoop = []; //initialize empty loop
-    $scope.filteredEvents = [];//trial empty loop for filtering
-    
-    $scope.toggleSelection = function toggleSelection(key) {
-        var index = $scope.selectedLoop.indexOf(key);
-        console.log($scope.selectedLoop);
-        if (index >= 0) {
-            $scope.selectedLoop.splice(index, 1);
-            //approach: take unchecked key removed from $scope.selectedLoop to iterate through $scope.filteredEvents to remove events that have keys equal to the removed key
-            console.log($scope.selectedLoop);
-            $scope.filteredEvents.length = 0; //reset array and push events with key(s) left in $scope.selectedLoop
-            angular.forEach($scope.selectedLoop, function (value,key) {
-                for (var i=0; i<$scope.allEvents.length; i++) {
-                    if (value === $scope.allEvents[i].key) {
-                        var index1 = $scope.filteredEvents.indexOf($scope.allEvents[i]);
-                        console.log(index1);
-                        if (index1 >= 0) {
-                            $scope.filteredEvents.splice(index1,1);
-                        } else {
-                            $scope.filteredEvents.push($scope.allEvents[i]);
-                        }
-                        console.log($scope.filteredEvents);
-                    }
-                }
-            })
-        } else {
-            //approach: for every key in $scope.selectedLoop, to iterate through $scope.allEvents and isolate events that have keys equal to the key in $scope.selectedLoop
-            $scope.selectedLoop.push(key);
-            console.log($scope.selectedLoop);
-            angular.forEach($scope.selectedLoop, function (value,key) {
-            console.log(value);
-            for(var i=0; i<$scope.allEvents.length; i++) {
-                if (value === $scope.allEvents[i].key) {
-                    console.log($scope.allEvents[i]);
-                    var index1 = $scope.filteredEvents.indexOf($scope.allEvents[i]);
-                    console.log(index1);
-                    if(index1 >= 0) {
-                        //$scope.filteredEvents.splice(index1,1);
-                    } else {
-                        $scope.filteredEvents.push($scope.allEvents[i]);
-                    }
-                console.log($scope.filteredEvents);
-                }
-            }
-        })
-        }
-        console.log($scope.filteredEvents);
-        //$scope.allEvents.splice(0, $scope.allEvents.length);
-        //$scope.allEvents = $scope.filteredEvents;
-        //console.log($scope.allEvents);
-        //rerender events to show only the filtered events on the calendar
-        
-    };*/
 }])
 
-app.controller('SignInCtrl', function($scope, $state) {
+app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
 
     $scope.data = {};
     
@@ -705,7 +646,16 @@ app.controller('SignInCtrl', function($scope, $state) {
             password: $scope.data.password }, function(error, userData) {
             if (error) {
                 console.log("Error creating user:", error);
+                var alertPopup = $ionicPopup.alert ({
+                    title: 'Unable to sign up',
+                    template: error
+                });
             } else {
+                //alert popup
+                var alertPopup = $ionicPopup.alert ({
+                    title: 'Thank you for signing up',
+                    template: 'Please proceed to login'
+                });
                 console.log("Successfully created user account with uid:", userData);
                 
                //To alert successful signup and proceed to login (limited by username.uid apparent bug??) //$state.go('app.loops.index');
@@ -721,6 +671,10 @@ app.controller('SignInCtrl', function($scope, $state) {
             password: $scope.data.password }, function(error, userData) {
             if (error) {
                 console.log("Login Failed!", error);
+                var alertPopup = $ionicPopup.alert ({
+                    title: 'Unable to log in',
+                    template: error
+                });
             } else {
                 console.log("Authenticated successfully with payload:", userData);
                 $state.go('app.loops.index');
