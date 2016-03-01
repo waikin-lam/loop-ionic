@@ -105,12 +105,6 @@ app.factory('loopsService', function($firebaseObject) {
       return loops[index]
     }
   }
-    //var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/loops');
-    //return {
-    //getLoop: function(key) {
-      //return $firebaseObject(ref.child(key));
-    //}
-  //}
 })
 
 //create a loops factory with a get method
@@ -126,12 +120,42 @@ app.factory('loopsFactory', ["$firebaseObject", function($firebaseObject) {
   }
 }])
 
+//user factory
+app.factory('usersService', ["$firebaseArray", function($firebaseArray){
+    var users = new Firebase("https://vivid-heat-1234.firebaseio.com/users");
+    
+    return $firebaseArray(users);
+}])
+
 app.controller('MainCtrl', function($scope) {
     
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService) {
+    
+    var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
+    
+    var uid = {};
+    //retrieve user unique id from users node
+    var userData = ref.getAuth();
+    var uid = userData.uid;
+    console.log(uid); //success!
+    
+    $scope.filteredLoops = [];
+    var user =[];
+    var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
+    userRef.on("value", function(snapshot) {
+        $scope.filteredLoops.length = 0;
+        $scope.loops = loopsFactory.getLoops();
+        snapshot.forEach(function (childSnapshot) {
+            var loopID = childSnapshot.key();
+            console.log(loopID);
+            //if (loopID === )
+        })
+    })
+    
+    //filter list of loops to show only those users are authorized to see
     $scope.loops = loopsFactory.getLoops();
     
     //scope for left side tab delete
@@ -144,14 +168,6 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     }).then(function(popover) {
         $scope.popover = popover;
     });
-    
-    var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
-    
-    var uid = {};
-    //retrieve user unique id from users node
-    var userData = ref.getAuth();
-    var uid = userData.uid;
-    console.log(uid); //success!
     
     //scope onItemDelete minus tab on nav-bar, with popup confirm
     $scope.onItemDelete = function(key) {
@@ -292,7 +308,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     };
 })
 
-app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject, $ionicListDelegate) {
+app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject, $ionicListDelegate, usersService) {
     // UI router: push key() as URL
     var loopId = $stateParams.key;
     //console.log(loopId); //success
@@ -425,6 +441,13 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         $scope.popover = popover;
     });
     
+      $ionicPopover.fromTemplateUrl('users.html', {
+        scope: $scope
+    }).then(function(addUserPopup) {
+        $scope.addUserPopup = addUserPopup;
+    });
+    
+    
     //function to add event details to loop in Firebase
     $scope.addEvent = function(eventName, eventDate, eventLocation) {
         //extract color from /loops tree
@@ -482,6 +505,22 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         $ionicListDelegate.closeOptionButtons();
     };
     
+    //ionicModal to show list of members in Loop
+    $ionicModal.fromTemplateUrl('users-modal.html', {
+        scope:$scope,
+        animation: 'slide-in-up'
+    }).then(function(userModal) {
+        $scope.userModal = userModal;
+    });
+    
+    $scope.openuserModal = function() {
+        $scope.userModal.show ();
+    }
+    
+    $scope.closeuserModal = function() {
+        $scope.userModal.hide();
+    }
+    
     //showConfirm function for popup to delete event
     $scope.showConfirm = function(event, $index) {
         var confirmPopup = $ionicPopup.confirm({
@@ -502,6 +541,54 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 }
             })
         }
+    
+    $scope.user =[];
+    //search users to be added into Loop
+    $scope.searchUser = function(email) {
+        $scope.users = usersService;
+        $scope.user.length = 0;
+        console.log($scope.users);
+        for(i=0; i<$scope.users.length; i++) {
+            if (email === $scope.users[i].email) {
+                $scope.user.push({name:$scope.users[i].name, uid: $scope.users[i].$id});
+            }
+        }
+        console.log($scope.user);
+    }
+    
+    //add selected user into Firebase
+    $scope.addUserToFirebase = function addUserToFirebase(name, uid) {
+        //console.log(name); //success
+        //console.log(uid); //success
+        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        ref.child("members").child(loopId).child(uid).set(true);
+        ref.child("users").child(uid).child("loops").child(loopId).set(true);
+        //alert popup upon successfully added user into loop
+        var alertPopup = $ionicPopup.alert ({
+            title: 'Alert',
+            template: 'Successfully added user into loop'
+        });
+    }
+    
+    $scope.membersOfLoop = [];
+    //list of members of a loop
+    var membersRef = new Firebase("https://vivid-heat-1234.firebaseio.com/members/" + loopId);
+    membersRef.on("value", function(snapshot) {
+        $scope.membersOfLoop.length = 0;
+        $scope.users = usersService;
+        
+        snapshot.forEach(function(childSnapshot) {
+            var uid = childSnapshot.key();
+            //console.log(uid);
+            for (i=0; i<$scope.users.length; i++) {
+                if(uid === $scope.users[i].$id) {
+                    $scope.membersOfLoop.push({name: $scope.users[i].name});
+                }
+            }
+        })
+        //console.log($scope.membersOfLoop); //success
+    })
+    
 })
 
 app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig) {
@@ -657,6 +744,22 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
                     template: 'Please proceed to login'
                 });
                 console.log("Successfully created user account with uid:", userData);
+                console.log(userData.uid); //success
+                //split id from email
+                var email = $scope.data.email;
+                var emailID = email.substring(0, email.lastIndexOf("@"));
+                //start user/ tree with uid as parent and name and email as child
+                var newUser = {};
+                newUser["/users/" + userData.uid] = {
+                    name: emailID, 
+                    email: $scope.data.email 
+                }
+                //perform a deep-path update
+                ref.update(newUser, function(error) {
+                    if (error) {
+                        console.log("Error registering new user:", error);
+                    }
+                })
                 
                //To alert successful signup and proceed to login (limited by username.uid apparent bug??) //$state.go('app.loops.index');
             }

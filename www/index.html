@@ -152,6 +152,37 @@
       </script>
       <!-- end of script for popover form -->
       
+      <!-- script for Loop Add User popover in Loops -->
+      <script type="text/ng-template" id="users.html">
+        <ion-popover-view>
+            <ion-header-bar>
+                <h1 class="title">Add Member</h1>
+            </ion-header-bar>  
+            <ion-content>
+                <form name="userSearch" ng-submit="searchUser(email)">
+                <div class="list">
+                    <div class="item item-input-inset">
+                        <label class="item-input-wrapper">
+                            <input type="text" placeholder="Search Email" ng-model="email">
+                        </label>
+                        <button class="button button-small button-outline">
+                            <i class="icon ion-ios-search placeholder-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                </form>
+                <!-- outcome of search -->
+                <div class="list">
+                    <li class="item item-button-right" ng-repeat="user in user">{{user.name}}
+                        <button class="button button-outline" ng-click="addUserToFirebase(user.name, user.uid)">
+                        <i class="ion-plus-circled" ></i>
+                        </button>
+                    </li>
+                </div>
+            </ion-content>
+        </ion-popover-view>
+      </script>
+      
       <!-- script for Filter popover form input in My Calendar -->
       <script type="text/ng-template" id="my-popover.html">
         <ion-popover-view>
@@ -218,9 +249,10 @@
       
       <script type="text/ng-template" id="loop.html">
             <ion-view hide-tab-bar>
-              <ion-nav-title>{{title.join(", ")}}</ion-nav-title>
+              <ion-nav-title ng-click="openuserModal()">{{title.join(", ")}}</ion-nav-title>
                 <ion-nav-buttons side="secondary">
-            <button class="button button-clear ion-person-add" ng-click=""></button>
+                    <button class="button button-clear ion-person-add" ng-click="addUserPopup.show($event)"></button>
+                    <span></span>
                     <span></span>
                     <span></span>
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
@@ -262,6 +294,24 @@
           <button class="button button-outline button-assertive" ng-click="logOut()">Sign-out</button>
         </ion-content>
         </ion-view>
+      </script>
+      
+      <!-- script for users modal in Loop view -->
+      <script type="text/ng-template" id="users-modal.html">
+        <ion-modal-view>
+            <ion-header-bar>
+                <h1 class="title">Members of Loop</h1>
+                <button class="button" ng-click="closeuserModal()">X</button>
+            </ion-header-bar>
+            <ion-content>
+                <!-- contents listing members of a loop-->
+                <ul class="list">
+                    <li class="item" ng-repeat="member in membersOfLoop">
+                        {{member.name}}
+                    </li>
+                </ul>
+            </ion-content>
+        </ion-modal-view>
       </script>
       
       <!-- script for edit modal in Loop view -->
