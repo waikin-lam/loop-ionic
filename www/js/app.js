@@ -120,6 +120,13 @@ app.factory('loopsFactory', ["$firebaseObject", function($firebaseObject) {
   }
 }])
 
+//loops factory with firebaseArray
+app.factory('loopsArray', ["$firebaseArray", function($firebaseArray) {
+    var ref = new Firebase("https://vivid-heat-1234.firebaseio.com/loops");
+    
+    return $firebaseArray(ref);
+}])
+
 //user factory
 app.factory('usersService', ["$firebaseArray", function($firebaseArray){
     var users = new Firebase("https://vivid-heat-1234.firebaseio.com/users");
@@ -132,7 +139,7 @@ app.controller('MainCtrl', function($scope) {
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService, loopsArray, $firebaseArray) {
     
     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
     
@@ -142,22 +149,55 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     var uid = userData.uid;
     console.log(uid); //success!
     
-    $scope.filteredLoops = [];
-    var user =[];
-    var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
-    userRef.on("value", function(snapshot) {
-        $scope.filteredLoops.length = 0;
-        $scope.loops = loopsFactory.getLoops();
-        snapshot.forEach(function (childSnapshot) {
-            var loopID = childSnapshot.key();
-            console.log(loopID);
-            //if (loopID === )
-        })
-    })
+    $scope.loops = [];
+    var loopUIDfromUser = [];
+    var loopObject = [];
+    
+    //$scope.loops = loopsFactory.getLoops();
+    //$scope.loops = loopsArray;
     
     //filter list of loops to show only those users are authorized to see
-    $scope.loops = loopsFactory.getLoops();
-    
+    var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
+    var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
+    userRef.on("value", function(userSnapshot) {
+        
+        loopUIDfromUser.length = 0;
+        var user = userSnapshot.val();
+        //console.log(user);
+        //console.log(Object.keys(user).length);
+        for (var loopUID in user) {
+            if (user.hasOwnProperty(loopUID)) {
+                var index = loopUIDfromUser.indexOf(loopUID);
+                if (index = -1) {
+                    loopUIDfromUser.push(loopUID);
+                }
+            }
+        }
+        //console.log(loopUIDfromUser);
+        loops.on("value", function(loopSnapshot) {
+            loopObject.length = 0;
+            var loop = loopSnapshot.val();
+            for (var loopUID in loop) {
+                if (loop.hasOwnProperty(loopUID)) {
+                    //console.log(loopUID);
+                    //console.log(loop[loopUID]);
+                    loopObject.push({key: loopUID, name: loop[loopUID].name})
+                    //console.log(loopObject);
+                }
+            }
+            //console.log(loopObject.length);
+            $scope.loops.length = 0;
+            angular.forEach(loopUIDfromUser, function (key) {
+                for (var i=0; i<loopObject.length; i++) {
+                    if (key === loopObject[i].key) {
+                        $scope.loops.push(loopObject[i]);
+                    }
+                }
+            })
+            //console.log($scope.loops);
+        })
+    })
+
     //scope for left side tab delete
     $scope.data = {
         showDelete: false
@@ -591,10 +631,11 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     
 })
 
-app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig) {
+app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray) {
 
     //initialize loops for filter view
-    $scope.loops = loopsFactory.getLoops();
+    //$scope.loops = loopsFactory.getLoops();
+    $scope.loops = loopsArray;
                                   
     //initialize scope for consolidated Events
     $scope.allEvents =[];
