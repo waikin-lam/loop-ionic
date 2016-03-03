@@ -11,9 +11,6 @@
       <link rel="stylesheet" href="lib/fullcalendar/dist/fullcalendar.css"/>
       <link rel="stylesheet" href="lib/qtip2/jquery.qtip.min.css">
 
-    <!-- ionic/angularjs js -->
-    <script src="lib/ionic/js/ionic.bundle.js"></script>
-
     <!-- cordova script (this will be a 404 during development) -->
     <script src="cordova.js"></script>
       
@@ -24,9 +21,20 @@
       <script type="text/javascript" src="lib/angular-ui-calendar/src/calendar.js"></script>
       <script type="text/javascript" src="lib/fullcalendar/dist/fullcalendar.min.js"></script>
       <script type="text/javascript" src="lib/fullcalendar/dist/gcal.js"></script>
+      <script type="text/javascript" src="lib/jquery-ui/jquery-ui.min.js"></script>
       <!-- jquery mousewheel plugin -->
       <script type="text/javascript" src="lib/jquery-mousewheel/jquery.mousewheel.js"></script>
+      <!-- jquery qtip plugin -->
       <script type="text/javascript" src="lib/qtip2/jquery.qtip.min.js"></script>
+      
+      <!--jquery ui-touch-->
+      <script type="text/javascript" src="lib/jquery-ui-touch/jquery.ui.touch.js"></script>
+      
+      <!--jquery-ui-touch-punch
+      <script src = "lib/jquery-ui-touch-punch/jquery.ui.touch-punch.min.js"></script>-->
+      
+      <!-- ionic/angularjs js -->
+      <script src="lib/ionic/js/ionic.bundle.js"></script>
       
       <!--Firebase -->
       <script src="lib/firebase/firebase.js"></script>
@@ -198,7 +206,7 @@
                 <!--<ion-checkbox ng-repeat="(key, loop) in loops" name="filter" data-type={{key}}>
                 {{loop.name}}
                 </ion-checkbox>-->
-                <ion-checkbox ng-repeat="(key, loop) in loops" name="uncheckedLoops[]" value="{{key}}" ng-click="uncheck(key)">{{loop.name}}
+                <ion-checkbox ng-repeat="loop in loops" name="uncheckedLoops[]" value="{{loop.key}}" ng-click="uncheck(loop.key)">{{loop.name}}
                 </ion-checkbox>
                 <!--<div class="item item-button center">
                     <button class="button button-block button-outline button-positive" type="submit" ng-click="isChecked()">
@@ -229,7 +237,7 @@
           <ion-nav-buttons side="secondary">
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
           </ion-nav-buttons>
-          <ion-content>
+          <ion-content scroll="false">
                 <ion-list show-delete="data.showDelete">
                     <ion-item ng-repeat="loop in loops" class="item item-avatar" href="#/loops/{{loop.key}}">
                     <span>{{ loop.name }}</span><br>
@@ -258,7 +266,7 @@
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
             <ion-content>
-                <div class="calendar" ui-calendar="uiConfig.calendar" ng-model="eventSources" calendar="myCalendar"></div>
+                <div data-tap-disabled="true" class="calendar" ui-calendar="uiConfig.calendar" ng-model="eventSources" calendar="myCalendar"></div>
                 <!--Insert day view -->
                 <ion-list class="list">
                     <div class="item item-divider">

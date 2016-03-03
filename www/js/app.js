@@ -134,12 +134,19 @@ app.factory('usersService', ["$firebaseArray", function($firebaseArray){
     return $firebaseArray(users);
 }])
 
+//members factory
+app.factory('membersArray', ["$firebaseArray", function($firebaseArray) {
+    var members = new Firebase("https://vivid-heat-1234.firebaseio.com/members");
+    
+    return $firebaseArray(members);
+}])
+
 app.controller('MainCtrl', function($scope) {
     
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService, loopsArray, $firebaseArray) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService, loopsArray, membersArray) {
     
     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
     
@@ -152,9 +159,6 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     $scope.loops = [];
     var loopUIDfromUser = [];
     var loopObject = [];
-    
-    //$scope.loops = loopsFactory.getLoops();
-    //$scope.loops = loopsArray;
     
     //filter list of loops to show only those users are authorized to see
     var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
@@ -212,7 +216,8 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     //scope onItemDelete minus tab on nav-bar, with popup confirm
     $scope.onItemDelete = function(key) {
         var loopKey = ref.child('/loops').child(key);
-        var member = ref.child('/members').child(key);
+        var lastMember = ref.child('/members').child(key);
+        var member = ref.child('/members').child(key).child(uid);
         var user = ref.child('/users').child(uid).child('/loops').child(key);
         var events = ref.child('/events').child(key);
         
@@ -224,16 +229,31 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             okText: 'Yes',
             okType: 'button-positive'
         });
+        
         confirmPopup.then(function(res) {
-            if(res) {
+            var totalMembers = [];
+            var loopers = new Firebase("https://vivid-heat-1234.firebaseio.com/members/" + key);
+    
+            loopers.once("value", function(snapshot) {
+            var membersOfLoop = snapshot.val();
+            //console.log(membersOfLoop);
+            var totalMembers = Object.keys(membersOfLoop).length;
+            console.log(totalMembers);
+            if (totalMembers==1 && res) {
+                //check if there are more than 1 user in the loop; if there's more than 1, remove only user from the loop otherwise delete loop entirely
+                console.log(true);
                 loopKey.remove();
+                lastMember.remove();
+                user.remove();
+                events.remove();
+                return;
+            } else {
+                console.log(false);
                 member.remove();
                 user.remove();
-                events.remove()
-            } else
-                {
-                    //Do nothing
-                }
+                return;
+            }
+            })
         });
     }
     //Edit popup
@@ -263,11 +283,11 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             ]
         });
         
-        editNamePopup.then(function(res) {
-            //console.log('Tapped!', res);
-            if (res != null) {
+        editNamePopup.then(function(res1) {
+            console.log('Tapped!', res1);
+            if (res1 != null) {
                 var loopName = ref.child('/loops').child(key).child('name');
-                loopName.set(res);
+                loopName.set(res1);
                 $ionicListDelegate.closeOptionButtons();
             } else {
                 //do nothing
@@ -279,7 +299,8 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     //showConfirm popup to delete loop
     $scope.showConfirm = function(key) {
         var loopKey = ref.child('/loops').child(key);
-        var member = ref.child('/members').child(key);
+        var lastMember = ref.child('/members').child(key);
+        var member = ref.child('/members').child(key).child(uid);
         var user = ref.child('/users').child(uid).child('/loops').child(key);
         var events = ref.child('/events').child(key);
         
@@ -292,17 +313,35 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             okType: 'button-positive'
         });
         console.log(key);
+        
         confirmPopup.then(function(res) {
-            if(res) {
+            var totalMembers = [];
+            var loopers = new Firebase("https://vivid-heat-1234.firebaseio.com/members/" + key);
+    
+            loopers.once("value", function(snapshot) {
+            var membersOfLoop = snapshot.val();
+            //console.log(membersOfLoop);
+            var totalMembers = Object.keys(membersOfLoop).length;
+            console.log(totalMembers);
+                
+            if(totalMembers==1 && res) {
                 //to delete loop and associated data linkages
+                console.log(true);
                 loopKey.remove();
+                lastMember.remove();
+                user.remove();
+                events.remove();
+                return;
+            } else if (totalMembers != 1 && res) {
+                console.log(false);
                 member.remove();
                 user.remove();
-                events.remove()
+                return;
             } else {
                 $ionicListDelegate.closeOptionButtons();
             }
         });
+    })
     }
     
     //function to add loop to list and save it to multiple locations in the database
@@ -391,8 +430,43 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     $scope.uiConfig = {
         calendar: {
             fixedWeekCount: false,
+            //height: "auto",
             contentHeight: "auto",
             editable: true,
+            dayClick: function(date, jsEvent, view) {
+                this.addTouch();
+                //push Date into $scope.todaysDate to be passed into view
+                var todaysDate = date.format('Do MMMM YYYY');
+                $scope.todaysDate.length = 0;
+                $scope.todaysDate.push(todaysDate);
+                
+                //push Events into list
+                $scope.eventsByDate.length = 0;
+                var truncatedDate = date.format('YYYY-MM-DD');
+                //console.log(truncatedDate); // 2016-02-11
+                var eventsByDate = new Firebase("https://vivid-heat-1234.firebaseio.com/events/" + loopId);
+                eventsByDate.orderByChild("start").on("child_added",function(eventsSnapshots) {
+                    
+                    var singleEvent = eventsSnapshots.val();
+                    var key = eventsSnapshots.key();
+                    //console.log(key); //unique ID of events
+                    var singleEventDate = singleEvent.start;
+                    //console.log(singleEventDate); //logs datetime in ISO format by order of eventkey i.e. whichever came first
+                        
+                    if (singleEventDate.includes(truncatedDate)) {
+                        //retrieve event date, time, title and location and push to array $scope.eventsByDate
+                        var singleEventTime = moment(singleEventDate).format('hh:mm a');
+                        //console.log(singleEventTime);
+                        $scope.eventsByDate.push({key: key, title: singleEvent.title, location: singleEvent.location, time: singleEventTime, start: singleEventDate});
+                        console.log($scope.eventsByDate); 
+                    } else {
+                        //do nothing
+                    }
+                })
+            },
+            /*eventClick: function(event, jsEvent, view) {
+                this.addTouch();
+            },*/
             eventDrop: function(event, delta, revertFunc) {
                 alert(event.title + " was dropped on " + event.start.format());
                 if (!confirm("Are you sure about this change?")) {
@@ -428,37 +502,6 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                     })  
                 })
             },
-            dayClick: function(date, jsEvent, view) {
-                
-                //push Date into $scope.todaysDate to be passed into view
-                var todaysDate = date.format('Do MMMM YYYY');
-                $scope.todaysDate.length = 0;
-                $scope.todaysDate.push(todaysDate);
-                
-                //push Events into list
-                $scope.eventsByDate.length = 0;
-                var truncatedDate = date.format('YYYY-MM-DD');
-                //console.log(truncatedDate); // 2016-02-11
-                var eventsByDate = new Firebase("https://vivid-heat-1234.firebaseio.com/events/" + loopId);
-                eventsByDate.orderByChild("start").on("child_added",function(eventsSnapshots) {
-                    
-                    var singleEvent = eventsSnapshots.val();
-                    var key = eventsSnapshots.key();
-                    //console.log(key); //unique ID of events
-                    var singleEventDate = singleEvent.start;
-                    //console.log(singleEventDate); //logs datetime in ISO format by order of eventkey i.e. whichever came first
-                        
-                    if (singleEventDate.includes(truncatedDate)) {
-                        //retrieve event date, time, title and location and push to array $scope.eventsByDate
-                        var singleEventTime = moment(singleEventDate).format('hh:mm a');
-                        //console.log(singleEventTime);
-                        $scope.eventsByDate.push({key: key, title: singleEvent.title, location: singleEvent.location, time: singleEventTime, start: singleEventDate});
-                        console.log($scope.eventsByDate); 
-                    } else {
-                        //do nothing
-                    }
-                })
-            },
             timezone: 'local',
             firstDay: 1,
             header: {
@@ -468,9 +511,17 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
             },
             eventRender: function(event, element, view) {
                 element.qtip({
-                    content: event.title
+                    content: event.title,
+                    show: {
+                        solo: true,
+                    },
+                    hide: 'unfocus',
+                    position: {
+                        viewport: true,
+                    }
                 });
-            }
+                element.addTouch();
+            },
         },
     },
     
@@ -633,12 +684,91 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
 
 app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray) {
 
-    //initialize loops for filter view
-    //$scope.loops = loopsFactory.getLoops();
-    $scope.loops = loopsArray;
-                                  
+    var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
+    
+    var uid = {};
+    //retrieve user unique id from users node
+    var userData = ref.getAuth();
+    var uid = userData.uid;
+    console.log(uid); //success!
+    
     //initialize scope for consolidated Events
     $scope.allEvents =[];
+    
+    $scope.loops = [];
+    var loopUIDfromUser = [];
+    var loopObject = [];
+    var eventKeys = [];
+    
+    //filter list of loops to show only those users are authorized to see
+    var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
+    var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
+    var allEventsRoot = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
+    
+    userRef.on("value", function(userSnapshot) {
+        
+        loopUIDfromUser.length = 0;
+        var user = userSnapshot.val();
+        //console.log(user);
+        //console.log(Object.keys(user).length);
+        for (var loopUID in user) {
+            if (user.hasOwnProperty(loopUID)) {
+                var index = loopUIDfromUser.indexOf(loopUID);
+                if (index = -1) {
+                    loopUIDfromUser.push(loopUID);
+                }
+            }
+        }
+        //console.log(loopUIDfromUser);
+        loops.on("value", function(loopSnapshot) {
+            loopObject.length = 0;
+            var loop = loopSnapshot.val();
+            for (var loopUID in loop) {
+                if (loop.hasOwnProperty(loopUID)) {
+                    //console.log(loopUID);
+                    //console.log(loop[loopUID]);
+                    loopObject.push({key: loopUID, name: loop[loopUID].name})
+                    //console.log(loopObject);
+                }
+            }
+            //console.log(loopObject.length);
+            $scope.loops.length = 0;
+            angular.forEach(loopUIDfromUser, function (key) {
+                for (var i=0; i<loopObject.length; i++) {
+                    if (key === loopObject[i].key) {
+                        $scope.loops.push(loopObject[i]);
+                    }
+                }
+            })
+            //console.log($scope.loops[0].key);
+        })
+        allEventsRoot.on("value", function (allSnapshot) {
+            $timeout(function() {
+                eventKeys.length = 0;
+                allSnapshot.forEach(function(childSnapshot) {
+                    var key = childSnapshot.key();
+                    eventKeys.push(key);
+                })
+                //console.log(eventKeys);
+                //console.log($scope.loops);
+                $scope.allEvents.length = 0;
+                angular.forEach(eventKeys, function (key,value){
+                    for (var i=0; i<$scope.loops.length; i++) {
+                        if (key === $scope.loops[i].key) {
+                            console.log(key);
+                            var eventData = allEventsRoot.child(key);
+                            eventData.on("child_added", function(allEventsSnapshot) {
+                                var allEventData = allEventsSnapshot.val();
+                                //console.log(allEventData);
+                                $scope.allEvents.push({title: allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key})
+                            })
+                        }  
+                    }
+                })
+                console.log($scope.allEvents);
+            })
+        })
+    })
     
     $ionicPopover.fromTemplateUrl('my-popover.html', {
     scope: $scope
@@ -659,31 +789,23 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 center: 'title',
                 right: 'next'
             },
-            eventRender: function eventRender(event, element,view) {
+            eventRender: function (event, element, view) {
                 //jquery qtip functionality to highlight event title
                 element.qtip({
-                    content: event.title
+                    content: event.title,
+                    show: {
+                        solo: true,
+                    },
+                    hide: 'unfocus',
+                    position: {
+                        viewport: true,
+                    }
                 });
+                element.addTouch();
             },
          },
     };
     
-    var allEventsRoot = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
-    allEventsRoot.on("value", function (allSnapshot){
-        $timeout(function(){
-            allSnapshot.forEach(function(childSnapshot) {
-                var key = childSnapshot.key();
-                //console.log(key);
-                var eventData = allEventsRoot.child(key);
-                eventData.on("child_added", function(allEventsSnapshot) {
-                    var allEventData = allEventsSnapshot.val();
-                    //console.log(allEventData); //successful in retrieving loopIds
-                    $scope.allEvents.push({title:allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key})
-                })
-            })
-            console.log($scope.allEvents);
-        })
-    })
     //initialize calendar view
     $scope.eventSources = [$scope.allEvents];
     
