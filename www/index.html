@@ -92,12 +92,12 @@
             
             <!-- ui-sref is a directive that binds a link to a state -->
             
-          <ion-tab title="Follow" icon="ion-arrow-swap" ui-sref="app.follow">
-            <ion-nav-view name="follow"></ion-nav-view>
+          <ion-tab title="Link" icon="ion-link" ui-sref="app.link">
+            <ion-nav-view name="link"></ion-nav-view>
           </ion-tab>
           
-          <ion-tab title="Settings" icon="ion-gear-a" ui-sref="app.settings">
-            <ion-nav-view name="settings"></ion-nav-view>
+          <ion-tab title="Notifications" icon="ion-alert" ui-sref="app.notifications">
+            <ion-nav-view name="notifications"></ion-nav-view>
           </ion-tab>
         </ion-tabs>
       </script>
@@ -224,7 +224,7 @@
             <button class="button button-clear ion-navicon-round" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
           <ion-content>
-              <div ui-calendar="uiConfig.calendar" calendar="myCalendar" ng-model="eventSources"></div>
+              <div data-tap-disabled="true" ui-calendar="uiConfig.calendar" calendar="myCalendar" ng-model="eventSources"></div>
           </ion-content>  
         </ion-view>
       </script>
@@ -256,7 +256,7 @@
       </script>
       
       <script type="text/ng-template" id="loop.html">
-            <ion-view hide-tab-bar>
+            <ion-view>
               <ion-nav-title ng-click="openuserModal()">{{title.join(", ")}}</ion-nav-title>
                 <ion-nav-buttons side="secondary">
                     <button class="button button-clear ion-person-add" ng-click="addUserPopup.show($event)"></button>
@@ -265,8 +265,8 @@
                     <span></span>
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
-            <ion-content>
-                <div data-tap-disabled="true" class="calendar" ui-calendar="uiConfig.calendar" ng-model="eventSources" calendar="myCalendar"></div>
+            <ion-content has-bouncing="false" scrollbar-y="false">
+                <div data-tap-disabled="true" scroll="false" class="calendar" ui-calendar="uiConfig.calendar" ng-model="eventSources" calendar="myCalendar"></div>
                 <!--Insert day view -->
                 <ion-list class="list">
                     <div class="item item-divider">
@@ -284,8 +284,8 @@
           </ion-view>
       </script>
 
-      <script type="text/ng-template" id="follow.html">
-        <ion-view title="Follow">
+      <script type="text/ng-template" id="link.html">
+        <ion-view title="Link">
             <ion-content>
                 <div class="list">
                     <a class="item item-thumbnail-left" href="#">
@@ -296,8 +296,8 @@
         </ion-view>
       </script>
       
-      <script type="text/ng-template" id="settings.html">
-        <ion-view title="Settings">
+      <script type="text/ng-template" id="notifications.html">
+        <ion-view title="Notifications">
         <ion-content>
           <button class="button button-outline button-assertive" ng-click="logOut()">Sign-out</button>
         </ion-content>

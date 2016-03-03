@@ -71,22 +71,22 @@ app.config(function($stateProvider, $urlRouterProvider) {
         //}
     })
     
-$stateProvider.state('app.follow', {
-        url: '/follow',
+$stateProvider.state('app.link', {
+        url: '/link',
         views: {
-            follow: {
-                templateUrl: 'follow.html',
-                controller: 'FollowCtrl'
+            link: {
+                templateUrl: 'link.html',
+                controller: 'LinkCtrl'
             }
         }
     })
     
-$stateProvider.state('app.settings', {
-        url: '/settings',
+$stateProvider.state('app.notifications', {
+        url: '/notifications',
         views: {
-            settings: {
-                templateUrl: 'settings.html',
-                controller: 'SettingsCtrl'
+            notifications: {
+                templateUrl: 'notifications.html',
+                controller: 'LoopsCtrl'
             }
         }
     })
@@ -189,7 +189,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                     //console.log(loopObject);
                 }
             }
-            //console.log(loopObject.length);
+            console.log(loopObject);
             $scope.loops.length = 0;
             angular.forEach(loopUIDfromUser, function (key) {
                 for (var i=0; i<loopObject.length; i++) {
@@ -431,7 +431,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         calendar: {
             fixedWeekCount: false,
             //height: "auto",
-            contentHeight: "auto",
+            contentHeight: "350",
             editable: true,
             dayClick: function(date, jsEvent, view) {
                 this.addTouch();
@@ -780,6 +780,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     $scope.uiConfig = {
         calendar: {
             //height: 350,
+            contentheight: "auto",
             fixedWeekCount: false,
             editable: false,
             timezone: 'local',
@@ -949,13 +950,13 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
     };
 })
 
-//controller for follow tab
-app.controller('FollowCtrl', function($scope) {
+//controller for link tab
+app.controller('LinkCtrl', function($scope) {
     
 })
 
-//controller for settings tab
-app.controller('SettingsCtrl', function($scope, $state) {
+//controller for notifications tab
+app.controller('LoopsCtrl', function($scope, $state) {
     $scope.logOut = function() {
         var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
         ref.unauth();
