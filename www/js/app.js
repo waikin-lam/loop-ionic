@@ -71,6 +71,18 @@ app.config(function($stateProvider, $urlRouterProvider) {
         //}
     })
     
+    /*$stateProvider.state('app.loops.detail.members', {
+        url: '/members',
+        templateUrl: 'members.html',
+        controller: 'loopCtrl',
+    })
+    
+    $stateProvider.state('app.loops.detail.alerts', {
+        url: '/alerts',
+        templateUrl: 'alerts.html',
+        controller: 'loopCtrl',
+    })*/
+    
 $stateProvider.state('app.link', {
         url: '/link',
         views: {
@@ -81,12 +93,12 @@ $stateProvider.state('app.link', {
         }
     })
     
-$stateProvider.state('app.notifications', {
-        url: '/notifications',
+$stateProvider.state('app.settings', {
+        url: '/settings',
         views: {
-            notifications: {
-                templateUrl: 'notifications.html',
-                controller: 'LoopsCtrl'
+            settings: {
+                templateUrl: 'settings.html',
+                controller: 'SettingsCtrl'
             }
         }
     })
@@ -141,12 +153,19 @@ app.factory('membersArray', ["$firebaseArray", function($firebaseArray) {
     return $firebaseArray(members);
 }])
 
+//events factory
+app.factory('eventsArray', ["$firebaseArray", function($firebaseArray) {
+    var events = new Firebase("https://vivid-heat-1234.firebaseio.com/events");
+    
+    return $firebaseArray(events);
+}])
+
 app.controller('MainCtrl', function($scope) {
     
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService, loopsArray, membersArray) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService, loopsArray, membersArray, eventsArray, $q) {
     
     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
     
@@ -159,13 +178,132 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     $scope.loops = [];
     var loopUIDfromUser = [];
     var loopObject = [];
+    var loopsToDisplay = [];
+    var eventsObject = [];
+    var filteredEvents = [];
+    var startTimes = [];
     
     //filter list of loops to show only those users are authorized to see
     var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
     var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
-    userRef.on("value", function(userSnapshot) {
+    var events = new Firebase('https://vivid-heat-1234.firebaseio.com/events/')
+    
+    // get current time
+    var currentDate = new Date();
+    var currentDateInMS = currentDate.getTime();
+    console.log(currentDateInMS);
+    
+    //--
+    // to get loopUID from users tree
+    function getLoopUIDfromUserPromise(uid) {
+        loopUIDfromUser.length = 0;
+        return ref.child('users').child(uid).child('loops').once('value').then(function(loopIDfrUser) {
+            //console.log(loopIDfrUser.val()); //loop IDs of which user is a member of
+            var user = loopIDfrUser.val();
+            angular.forEach(user, function (key, value) {
+                //console.log(value); //returns loopID
+                loopUIDfromUser.push(value);
+            })
+            return loopUIDfromUser;
+        });
+    }
+    
+    var loopIDfromUsers = getLoopUIDfromUserPromise(uid);
+    
+    var loopIDfromLoops = loopIDfromUsers.then(function(loopIDfrUser) {
+        //console.log(loopIDfrUser); // loop IDs of which user is a member of
+        loopObject.length = 0;
+        loopsToDisplay.length = 0;
+        return ref.child('loops').once('value').then(function(loopIDfrLoops){
+            var loopsTree = loopIDfrLoops.val();
+            //console.log(loopsTree);
+            angular.forEach(loopsTree, function (key, value) {
+                //console.log(key); //yields loop object 
+                //console.log(value); //yields loopID
+                loopObject.push({key: value, name: key.name});
+            })
+            //console.log(loopObject);
+            angular.forEach(loopIDfrUser, function (key) {
+                //console.log(key);
+                for (var i=0; i<loopObject.length; i++) {
+                    if (key === loopObject[i].key) {
+                        loopsToDisplay.push(loopObject[i]);
+                    }
+                }
+            })
+            console.log(loopsToDisplay);
+            return loopsToDisplay;
+        });
+    })
+    
+    var eventsTree = loopIDfromUsers.then(function(loopIDfrUser){
+        
+        
+        eventsObject.length = 0;
+        filteredEvents.length = 0;
+        
+        var keyArray = [];
+        var tempStartTime = [];
+        
+        console.log(loopIDfrUser);
+        for (var i=0; i<loopIDfrUser.length; i++) {
+            var key = loopIDfrUser[i];
+            console.log(key)
+        }
+        
+        angular.forEach(loopIDfrUser, function (key) {
+           return ref.child('events').child(key).once('value').then(function(events) {
+               console.log(key);
+               var events = events.val();
+               for (var eventID in events) {
+                    if (events.hasOwnProperty(eventID)) {
+                        //console.log(eventID); // logs eventID
+                        console.log(events[eventID]);
+                        
+                        var dateInFull = new Date(events[eventID].start);
+                        var dateInMS = dateInFull.getTime();
+                        //console.log(dateInMS);
+                        
+                        var diff = dateInMS - currentDateInMS;
+                        console.log(diff);
+                        
+                        var index = keyArray.indexOf(key);
+                        
+                        if (index === -1 && diff > 0) {
+                            console.log(false);
+                            keyArray.push(key);
+                            tempStartTime.push(diff);
+                            startTimes.push({key:key, start:events[eventID].start, title:events[eventID].title})
+                            
+                        } else if (index === 0 && diff > 0 && diff < tempStartTime[0]) {
+                            console.log(true);
+                            tempStartTime.length = 0;
+                            tempStartTime.push(diff);
+                            startTimes.length = 0;
+                            startTimes.push({key:key, start:events[eventID].start, title:events[eventID].title})
+                        }
+                    }
+               }
+            })
+        })  
+        //console.log(startTimes);
+        return startTimes;
+    });
+    
+    Promise.all([loopIDfromUsers, loopIDfromLoops, eventsTree]).then(function(results) {
+        console.log(results);
+        $scope.loops = results[1];
+        //var events = results[2];
+        //console.log(loops);
+        //console.log(events);
+    });
+    //--
+    
+    /*userRef.on("value", function(userSnapshot) {
         
         loopUIDfromUser.length = 0;
+        //startTimes.length = 0;
+        
         var user = userSnapshot.val();
         //console.log(user);
         //console.log(Object.keys(user).length);
@@ -177,30 +315,143 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 }
             }
         }
+        
         //console.log(loopUIDfromUser);
+        //console.log(loopUIDfromUser.length);
+        
         loops.on("value", function(loopSnapshot) {
             loopObject.length = 0;
             var loop = loopSnapshot.val();
+            //console.log(loop);
             for (var loopUID in loop) {
                 if (loop.hasOwnProperty(loopUID)) {
                     //console.log(loopUID);
                     //console.log(loop[loopUID]);
-                    loopObject.push({key: loopUID, name: loop[loopUID].name})
-                    //console.log(loopObject);
+                    //loopObject.push({key: loopUID, name: loop[loopUID].name})
                 }
             }
             console.log(loopObject);
-            $scope.loops.length = 0;
-            angular.forEach(loopUIDfromUser, function (key) {
-                for (var i=0; i<loopObject.length; i++) {
-                    if (key === loopObject[i].key) {
-                        $scope.loops.push(loopObject[i]);
+            
+            var keyArray = [];
+            var tempStartTime = [];
+            
+            /*for (var i=0; i<loopUIDfromUser.length; i++) {
+                var event = events.child(loopUIDfromUser[i]);
+                event.on("value", function(snapshots) {
+                    var eventKey = snapshots.key();
+                    console.log(eventKey); //loop key
+                    var eventVal = snapshots.val();
+                    //console.log(eventVal); //event object
+                    for (var eventID in eventVal) {
+                        if (eventVal.hasOwnProperty(eventID)) {
+                            console.log(eventID); //event keys
+                            //console.log(eventVal[eventID].start);
+                            var dateInFull = new Date( eventVal[eventID].start);
+                            //console.log(dateInMS);
+                            var dateInMs = dateInFull.getTime();
+                            //console.log(dateInMs); //convert date into milliseconds
+                            
+                            var diff = dateInMs - currentDateInMS;
+                            console.log(diff); //compute difference between event time and current time in milliseconds
+                            
+                            var index = keyArray.indexOf(eventKey);
+                            console.log(index);
+                            
+                            if (index === -1 && diff > 0) {
+                                //push difference into tempStartTime array if eventKey is not present in keyArray i.e. first event evaluated
+                                keyArray.push(eventKey);
+                                tempStartTime.push(diff);
+                                console.log(tempStartTime[0]);
+                                startTimes.push({key: eventKey, start: eventVal[eventID].start, title: eventVal[eventID].title})
+                            } else if (index === 0 && diff > 0 && diff < tempStartTime[0]) {
+                                //else for event 2 onwards, to compare diff against diff in tempStartTime and overwrite
+                                console.log(true);
+                                tempStartTime.length = 0;
+                                tempStartTime.push(diff);
+
+                            }
+                            console.log(keyArray);
+                            console.log(tempStartTime);
+                            console.log(startTimes);
+
+                        }
                     }
-                }
-            })
-            //console.log($scope.loops);
+                })
+                                
+            }*/
+            
+            //$q.all(startTimes).then(function() {
+                /*$scope.loops.length = 0;
+                angular.forEach(loopUIDfromUser, function (key) {
+                    for (var i=0; i<loopObject.length; i++) {
+                        if (key === loopObject[i].key) {
+                            /*event = events.child(loopUIDfromUser[i]);
+                            event.on("value", function(snapshot) {
+                                snapshot.forEach(function(childSnapshot) {
+                                    var key = childSnapshot.key();
+                                    console.log(key);
+                                    
+                                    var childData = childSnapshot.val();
+                                    console.log(childData);
+                                })
+                            })*/
+                            /*$scope.loops.push(loopObject[i]);
+                        }
+                    }
+                })
+                console.log($scope.loops);
+                    angular.forEach(startTimes, function (key,value) {
+                    console.log(key);
+                    //console.log(value);
+                })
+                
+            //}) 
         })
-    })
+    })*/
+    
+    //compare event datetime with final array being one loop with one event with the latter being the upcoming
+    /*var events = new Firebase("https://vivid-heat-1234.firebaseio.com/events/");
+    
+    var currentDate = new Date();
+    var currentDateInMS = currentDate.getTime();
+    console.log(currentDateInMS);
+    
+    var diffInTime = [];
+    var nextEventTime = [];
+    
+    events.on("child_added", function (snapshots) {
+        var loopKey = snapshots.key();
+        //console.log(loopKey);
+        var loopEvents = snapshots.val();
+        console.log(loopEvents);
+        angular.forEach(loopEvents, function(key, value) {
+            //console.log(loopKey);
+            console.log(key.start); // returns object 
+            //console.log(value); // returns event unique ID
+            var d = new Date(key.start);
+            var e = d.getTime(); //time in milliseconds
+            var diff = e - currentDateInMS;
+            console.log(diff);
+            if (diff > 0) {
+                diffInTime.push(diff);
+            }
+            console.log(diffInTime);
+            diffInTime.sort();
+            console.log(diffInTime);
+            //var nextEventTime = Math.min(diffInTime);
+            //console.log(nextEventTime);
+            startTimes.push({loopID: loopKey, key: value, start: e, title: key.title});
+        })
+        $q.all(startTimes, diffInTime).then(function () {
+            //console.log(startTimes);
+            //console.log(diffInTime);
+        })
+        console.log(startTimes.length);
+        for (var i=0; i<startTimes.length; i++) {
+            var diff = startTimes[i].start - currentDateInMS;
+            console.log(diff);
+        }
+    })*/
 
     //scope for left side tab delete
     $scope.data = {
@@ -310,7 +561,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             cancelText: 'No',
             cancelType: 'button-default',
             okText: 'Yes',
-            okType: 'button-positive'
+            okType: 'button-dark'
         });
         console.log(key);
         
@@ -387,7 +638,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     };
 })
 
-app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject, $ionicListDelegate, usersService) {
+app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject, $ionicListDelegate, usersService, $ionicSlideBoxDelegate) {
     // UI router: push key() as URL
     var loopId = $stateParams.key;
     //console.log(loopId); //success
@@ -468,10 +719,10 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 this.addTouch();
             },*/
             eventDrop: function(event, delta, revertFunc) {
-                alert(event.title + " was dropped on " + event.start.format());
+                /*alert(event.title + " was dropped on " + event.start.format());
                 if (!confirm("Are you sure about this change?")) {
                     revertFunc();
-                }
+                }*/
                 //console.log(event.start._d.toISOString()); //new time
                 //console.log(event.start._i); //original time
                 //console.log(event); //event from eventDrop function
@@ -532,12 +783,11 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         $scope.popover = popover;
     });
     
-      $ionicPopover.fromTemplateUrl('users.html', {
+    $ionicPopover.fromTemplateUrl('users.html', {
         scope: $scope
     }).then(function(addUserPopup) {
         $scope.addUserPopup = addUserPopup;
     });
-    
     
     //function to add event details to loop in Firebase
     $scope.addEvent = function(eventName, eventDate, eventLocation) {
@@ -606,6 +856,9 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     
     $scope.openuserModal = function() {
         $scope.userModal.show ();
+        $timeout(function() {
+            $ionicSlideBoxDelegate.update();
+        })
     }
     
     $scope.closeuserModal = function() {
@@ -616,7 +869,11 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     $scope.showConfirm = function(event, $index) {
         var confirmPopup = $ionicPopup.confirm({
             title: 'Delete Event',
-            template: 'Are you sure you want to delete this event?'
+            template: 'Are you sure you want to delete this event?',
+            cancelText: 'No',
+            cancelType: 'button-default',
+            okText: 'Yes',
+            okType: 'button-dark'
         });
             confirmPopup.then(function(res){
                 if(res) {
@@ -679,7 +936,6 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         })
         //console.log($scope.membersOfLoop); //success
     })
-    
 })
 
 app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray) {
@@ -944,7 +1200,7 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
                 });
             } else {
                 console.log("Authenticated successfully with payload:", userData);
-                $state.go('app.loops.index');
+                $state.go('app.mycalendar');
             }
         });
     };
@@ -955,8 +1211,8 @@ app.controller('LinkCtrl', function($scope) {
     
 })
 
-//controller for notifications tab
-app.controller('LoopsCtrl', function($scope, $state) {
+//controller for settings tab
+app.controller('SettingsCtrl', function($scope, $state) {
     $scope.logOut = function() {
         var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
         ref.unauth();

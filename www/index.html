@@ -22,8 +22,10 @@
       <script type="text/javascript" src="lib/fullcalendar/dist/fullcalendar.min.js"></script>
       <script type="text/javascript" src="lib/fullcalendar/dist/gcal.js"></script>
       <script type="text/javascript" src="lib/jquery-ui/jquery-ui.min.js"></script>
+      
       <!-- jquery mousewheel plugin -->
       <script type="text/javascript" src="lib/jquery-mousewheel/jquery.mousewheel.js"></script>
+      
       <!-- jquery qtip plugin -->
       <script type="text/javascript" src="lib/qtip2/jquery.qtip.min.js"></script>
       
@@ -55,8 +57,14 @@
       
       <script type="text/ng-template" id="sign-in.html">
         <ion-view hide-nav-bar="true">
-            <ion-content>
-              <div class="list">
+            <ion-content scroll="false">
+                <br>
+                <br>
+                <br>
+              <div class="padding">
+                <img class="img-center" src="img/Loop.jpeg" alt="">
+              </div>
+              <div class="list list-inset">
                 <label class="item item-input">
                   <span class="input-label">Email</span>
                   <input type="email" placeholder="you@domain.com" ng-model="data.email">
@@ -66,9 +74,11 @@
                   <input type="password" placeholder="enter your secure password" ng-model="data.password">
                 </label>
               </div>
-              <div class="padding">
-                <button class="button button-block button-positive" ng-click="signupEmail()">Sign-Up</button>
-                  <button class="button button-block button-positive" ng-click="loginEmail()">Log-In</button>
+              <div class="col text-center">
+                  <button class="button button-large button-outline button-dark" ng-click="signupEmail()">Sign-Up</button>
+                  <button class="button button-large button-outline button-dark" ng-click="loginEmail()">Log-In </button>
+                  <br>
+                  <br>
                 <p class="text-center">Forgot password</p>
               </div>
             </ion-content>  
@@ -76,12 +86,12 @@
       </script>
       
       <script type="text/ng-template" id="main.html">
-        <ion-nav-bar class="bar-positive">
+        <ion-nav-bar class="bar-dark">
           <ion-nav-back-button class="button-clear">
             <i class="ion-chevron-left"></i>
           </ion-nav-back-button>
         </ion-nav-bar>
-        <ion-tabs class="tabs-positive tabs-icon-top">
+        <ion-tabs class="tabs-dark tabs-icon-top">
           <ion-tab title="My Calendar" icon="tabs-icon-top ion-calendar" ui-sref="app.mycalendar">
             <ion-nav-view name="mycalendar"></ion-nav-view>
           </ion-tab>
@@ -96,8 +106,8 @@
             <ion-nav-view name="link"></ion-nav-view>
           </ion-tab>
           
-          <ion-tab title="Notifications" icon="ion-alert" ui-sref="app.notifications">
-            <ion-nav-view name="notifications"></ion-nav-view>
+          <ion-tab title="Settings" icon="ion-gear-a" ui-sref="app.settings">
+            <ion-nav-view name="settings"></ion-nav-view>
           </ion-tab>
         </ion-tabs>
       </script>
@@ -128,7 +138,7 @@
                   <input type="text" placeholder="Buddies">
                 </label> -->
             <div class="item item-button center">
-                <button class="button button-block button-outline button-positive">Add Event</button>
+                <button class="button button-block button-outline button-dark">Add Event</button>
             </div>
             </div>
            </form>
@@ -152,7 +162,7 @@
                   </label>
                 </div>
                 <div class="item item-button center">
-                <button class="button button-block button-outline button-positive" type="submit">Create New Loop</button>
+                <button class="button button-block button-outline button-dark" type="submit">Create New Loop</button>
             </div>
             </form>
             </ion-content>
@@ -237,14 +247,15 @@
           <ion-nav-buttons side="secondary">
             <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
           </ion-nav-buttons>
-          <ion-content scroll="false">
+          <ion-content>
                 <ion-list show-delete="data.showDelete">
                     <ion-item ng-repeat="loop in loops" class="item item-avatar" href="#/loops/{{loop.key}}">
-                    <span>{{ loop.name }}</span><br>
-                        <!--<span>next event</span>-->
-                    <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(loop.key)"></ion-delete-button>
-                    <ion-option-button class="button-positive" ng-click="editPopup(loop.key)">Edit</ion-option-button>
-                    <ion-option-button class="button-assertive" ng-click="showConfirm(loop.key)">Delete</ion-option-button>
+                        <img src="img/Loop.jpeg">
+                        <span>{{ loop.name }}</span><br>
+                        <p>next event</p>
+                        <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(loop.key)"></ion-delete-button>
+                        <ion-option-button class="button-dark" ng-click="editPopup(loop.key)">Edit</ion-option-button>
+                        <ion-option-button class="button-assertive" ng-click="showConfirm(loop.key)">Delete</ion-option-button>
                     </ion-item>
                 </ion-list>
             </ion-content>
@@ -263,7 +274,7 @@
                     <span></span>
                     <span></span>
                     <span></span>
-            <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
+                    <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
                 </ion-nav-buttons>
             <ion-content has-bouncing="false" scrollbar-y="false">
                 <div data-tap-disabled="true" scroll="false" class="calendar" ui-calendar="uiConfig.calendar" ng-model="eventSources" calendar="myCalendar"></div>
@@ -276,7 +287,7 @@
                         <span>{{event.time}}</span>
                         <span>{{event.title}}</span>
                         <span>@ {{event.location}}</span>
-                        <ion-option-button class="button-positive" ng-click="openModal(event, $index)">Edit</ion-option-button>
+                        <ion-option-button class="button-dark" ng-click="openModal(event, $index)">Edit</ion-option-button>
                         <ion-option-button class="button-assertive" ng-click="showConfirm(event, $index)">Delete</ion-option-button>
                     </ion-item>
                 </ion-list>
@@ -289,15 +300,17 @@
             <ion-content>
                 <div class="list">
                     <a class="item item-thumbnail-left" href="#">
-                        
+                        <img src="/img/Man_Utd.png"> <!--company logo-->
+                        <h2>Manchester United</h2> <!--company name-->
+                        <p>v West Bromwich Albion 6/3/2016</p> <!--next event-->
                     </a>
                 </div>
             </ion-content>
         </ion-view>
       </script>
       
-      <script type="text/ng-template" id="notifications.html">
-        <ion-view title="Notifications">
+      <script type="text/ng-template" id="settings.html">
+        <ion-view title="Settings">
         <ion-content>
           <button class="button button-outline button-assertive" ng-click="logOut()">Sign-out</button>
         </ion-content>
@@ -307,27 +320,66 @@
       <!-- script for users modal in Loop view -->
       <script type="text/ng-template" id="users-modal.html">
         <ion-modal-view>
-            <ion-header-bar>
-                <h1 class="title">Members of Loop</h1>
-                <button class="button" ng-click="closeuserModal()">X</button>
+            <ion-header-bar class="bar bar-header bar-dark">
+                <h1 class="title">Loop Information</h1>
+                <button class="button button-icon ion-close-circled" ng-click="closeuserModal()"></button>
             </ion-header-bar>
+            <ion-content class="has-header">
+                <ion-slide-box>
+                    <ion-slide>
+                        <div class="bar bar-header bar-stable">
+                            <h3 class="title">Members</h3>
+                        </div>
+                        <br><br>
+                        <div>
+                          <ul class="list">
+                            <li class="item" ng-repeat="member in membersOfLoop">
+                                {{member.name}}
+                            </li>
+                          </ul>
+                        </div>
+                        <br><br><br>
+                    </ion-slide>
+                    <ion-slide>
+                        <div class="bar bar-header bar-stable">
+                            <h3 class="title">Notifications</h3>
+                        </div>
+                        <br><br>
+                        <div>
+                          <ul class="list">
+                            
+                          </ul>
+                        </div>
+                    </ion-slide>
+                </ion-slide-box>
+            </ion-content>
+        </ion-modal-view>
+      </script>
+      
+      <!--<script type="text/ng-template" id="members.html">
             <ion-content>
-                <!-- contents listing members of a loop-->
                 <ul class="list">
                     <li class="item" ng-repeat="member in membersOfLoop">
                         {{member.name}}
                     </li>
-                </ul>
+                </ul>                        
             </ion-content>
-        </ion-modal-view>
       </script>
+      
+      <script type="text/ng-template" id="alerts.html">
+        <ion-view>
+            <ion-content>
+                Alerts
+            </ion-content>  
+        </ion-view>
+      </script>-->
       
       <!-- script for edit modal in Loop view -->
       <script type="text/ng-template" id="edit-modal.html">
         <ion-modal-view>
             <ion-header-bar>
                 <h1 class="title">Edit Event</h1>
-                <button class="button" ng-click="closeModal()">X</button>
+                <button class="button button-icon ion-close-circled" ng-click="closeModal()"></button>
             </ion-header-bar>
             <ion-content>
                 <!--contents of modal -->
@@ -345,7 +397,7 @@
                         <span class="input-label">Location</span>
                         <input type="text" placeholder="" ng-model="updateLocation">
                     </label>
-                    <button class="button button-block button-positive" ng-click="closeModal()">Update</button>
+                    <button class="button button-block button-dark" ng-click="closeModal()">Update</button>
                 </div>
                 </form>
             </ion-content>

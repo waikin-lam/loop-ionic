@@ -1,6 +1,12 @@
 /* Empty. Add your own CSS if you like */
-.done {
-  text-decoration: line-through;
+.img-circle {
+    border-radius: 50%;
+}
+
+img-center {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }
 
 .popover {
