@@ -37,7 +37,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('app.loops', {
         // abstract state will never be directly be activated but provides inherited properties to its common children states.
         abstract: true,
-        //cache: false,
+        cache: false,
         url: '/loops',
         // views property sets up multiple views within a single state.
         views: {
@@ -284,18 +284,32 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                         }
                     }
                }
+               //console.log(startTimes);
             })
+           return startTimes;
         })  
-        //console.log(startTimes);
-        return startTimes;
+        //return startTimes;
     });
     
-    Promise.all([loopIDfromUsers, loopIDfromLoops, eventsTree]).then(function(results) {
+    Promise.all([loopIDfromUsers, loopIDfromLoops, startTimes]).then(function(results) {
         console.log(results);
-        $scope.loops = results[1];
-        //var events = results[2];
-        //console.log(loops);
-        //console.log(events);
+        var overlapLoops = results[1];
+        var events = results[2];
+        //console.log(overlapLoops);
+        for (var i=0; i<overlapLoops.length; i++) {
+            angular.forEach(events, function (key, value) {
+                //console.log(key);
+                if (overlapLoops[i].key === key.key) {
+                    //console.log(true);
+                    //transform key.start to recognisable date
+                    console.log(key.start);
+                    
+                    $scope.loops.push({key: overlapLoops[i].key, name: overlapLoops[i].name, title: key.title, start: key.start});
+                    //console.log($scope.loops);
+                }
+            })
+        }
+        console.log($scope.loops);
     });
     //--
     
