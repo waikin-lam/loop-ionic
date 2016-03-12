@@ -252,7 +252,7 @@
                     <ion-item ng-repeat="loop in loops" class="item item-avatar" href="#/loops/{{loop.key}}">
                         <img src="img/Loop.jpeg">
                         <span>{{ loop.name }}</span><br>
-                        <p>next event: {{loop.title}} on {{loop.start | date: 'dd-MMM'}}</p>
+                        <p>next event: {{loop.title}} {{loop.start | date: 'dd-MMM'}}</p>
                         <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(loop.key)"></ion-delete-button>
                         <ion-option-button class="button-dark" ng-click="editPopup(loop.key)">Edit</ion-option-button>
                         <ion-option-button class="button-assertive" ng-click="showConfirm(loop.key)">Delete</ion-option-button>

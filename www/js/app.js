@@ -49,6 +49,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
     
     $stateProvider.state('app.loops.index', {
         url: '',
+        cache: false,
         templateUrl: 'loops.html',
         controller: 'LoopsCtrl'
 })
@@ -180,8 +181,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     var loopObject = [];
     var loopsToDisplay = [];
     var eventsObject = [];
-    var filteredEvents = [];
-    var startTimes = [];
+    var loopWithoutEvent = [];
     
     //filter list of loops to show only those users are authorized to see
     var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
@@ -210,6 +210,8 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     
     var loopIDfromUsers = getLoopUIDfromUserPromise(uid);
     
+    // get corresponding loopUIDs from loops tree and save corresponding loop key and loop name into [loopObject] 
+    // the length of [loopObject] array should be the same as the [loopUIDfromUser] array
     var loopIDfromLoops = loopIDfromUsers.then(function(loopIDfrUser) {
         //console.log(loopIDfrUser); // loop IDs of which user is a member of
         loopObject.length = 0;
@@ -231,242 +233,167 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                     }
                 }
             })
-            console.log(loopsToDisplay);
+            //console.log(loopsToDisplay);
             return loopsToDisplay;
         });
     })
     
+    // get events by loopID and compare each events against one another to obtain the closest upcoming event for display on view
     var eventsTree = loopIDfromUsers.then(function(loopIDfrUser){
-        
-        
+        var loops = [];
         eventsObject.length = 0;
-        filteredEvents.length = 0;
         
-        var keyArray = [];
-        var tempStartTime = [];
-        
-        console.log(loopIDfrUser);
+        //console.log(loopIDfrUser);
         for (var i=0; i<loopIDfrUser.length; i++) {
             var key = loopIDfrUser[i];
-            console.log(key)
+            //console.log(key)
         }
         
         angular.forEach(loopIDfrUser, function (key) {
+           var keyArray = [];
+           var tempStartTime = [];
+           var tempEventObject = [];
+            
            return ref.child('events').child(key).once('value').then(function(events) {
-               console.log(key);
+               //console.log(key);
                var events = events.val();
+               //console.log(events);
+               
                for (var eventID in events) {
                     if (events.hasOwnProperty(eventID)) {
                         //console.log(eventID); // logs eventID
-                        console.log(events[eventID]);
+                        //console.log(events[eventID]); //logs event object one by one, by loop ID
                         
+                        //convert event start time to that in milliseconds
                         var dateInFull = new Date(events[eventID].start);
                         var dateInMS = dateInFull.getTime();
                         //console.log(dateInMS);
                         
+                        // compare event start time to current start time, both in ms, with - implying event is in the past, and + implying upcoming event(s)
                         var diff = dateInMS - currentDateInMS;
-                        console.log(diff);
+                        //console.log(diff);
                         
+                        // check if loop has already an existing event with a dummy [keyArray] array
                         var index = keyArray.indexOf(key);
+                        //console.log(index);
                         
+                        // if loop has not been evaluated before and the event is one in the future
                         if (index === -1 && diff > 0) {
-                            console.log(false);
+                            //console.log(false);
                             keyArray.push(key);
+                            //console.log(keyArray);
                             tempStartTime.push(diff);
-                            startTimes.push({key:key, start:events[eventID].start, title:events[eventID].title})
+                            //console.log(tempStartTime);
+                            tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
+                            //console.log(tempEventObject);
                             
-                        } else if (index === 0 && diff > 0 && diff < tempStartTime[0]) {
-                            console.log(true);
+                        } else if (index > -1 && diff > 0 && diff < tempStartTime[0]) {
+                            //console.log(true);
                             tempStartTime.length = 0;
                             tempStartTime.push(diff);
-                            startTimes.length = 0;
-                            startTimes.push({key:key, start:events[eventID].start, title:events[eventID].title})
+                            //console.log(tempStartTime);
+                            tempEventObject.length = 0;
+                            tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
+                            //console.log(tempEventObject);
+                        } else if (index === -1 && diff < 0) {
+                            tempEventObject.length = 0;
+                            tempEventObject.push({key: key, title: "null"});
+                            //console.log(tempEventObject);
                         }
+                        //console.log(eventsObject);
+                    } else {
+                    //
                     }
                }
-               //console.log(startTimes);
+               //console.log(tempEventObject);
+               //to filter out loops with no events yet
+               if (tempEventObject.length === 1) {
+               eventsObject.push(tempEventObject[0]);
+               }
+               //console.log(eventsObject);
             })
-           return startTimes;
+           return eventsObject;
         })  
-        //return startTimes;
     });
     
-    Promise.all([loopIDfromUsers, loopIDfromLoops, startTimes]).then(function(results) {
+    //method to filter loops without a single event
+    var loopWithoutEvents = loopIDfromLoops.then(function(loopIDfrLoops) {
+        var loopID = [];
+               
+        //utility function to check if an object is empty
+        function isEmpty(obj) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key))
+                    return false;
+            }
+            return true;
+        }
+        
+        angular.forEach(loopIDfrLoops, function (key, value) {
+            var object = key;
+            var loopID = object.key;
+            
+            return ref.child('events').child(loopID).once('value').then(function(events){
+                var events = events.val();
+                console.log(events);
+                
+                // if {events} is empty
+               if(isEmpty(events)) {
+                   console.log(object);
+                   loopWithoutEvent.length = 0;
+                   loopWithoutEvent.push({key: object.key, name: object.name, title: 'null'});
+                   //console.log("events is empty");
+               }
+                console.log(loopWithoutEvent);
+            })
+            return loopWithoutEvent;
+        })
+    })
+    
+    Promise.all([loopIDfromUsers, loopIDfromLoops, eventsObject, loopWithoutEvent]).then(function(results) {
+        var loopContents = [];
+        
         console.log(results);
         var overlapLoops = results[1];
         var events = results[2];
-        //console.log(overlapLoops);
-        for (var i=0; i<overlapLoops.length; i++) {
-            angular.forEach(events, function (key, value) {
-                //console.log(key);
-                if (overlapLoops[i].key === key.key) {
-                    //console.log(true);
-                    //transform key.start to recognisable date
-                    console.log(key.start);
-                    
-                    $scope.loops.push({key: overlapLoops[i].key, name: overlapLoops[i].name, title: key.title, start: key.start});
-                    //console.log($scope.loops);
+        console.log(overlapLoops);
+        console.log(events);
+        var test = overlapLoops.concat(events);
+        console.log(test);
+        for (var i=0; i<test.length; ++i) {
+            for (var j=i+1; j<test.length; ++j) {
+                if(test[i].key === test[j].key) {
+                    loopContents.push({key: test[i].key, name: test[i].name, title: test[j].title, start: test[j].start});
+                    test.splice(j--, 1);
                 }
-            })
+            }  
         }
+        //console.log(test);
+        console.log(loopContents);
+        var emptyLoop = results[3];
+        console.log(emptyLoop);
+        
+        $scope.loops = loopContents.concat(emptyLoop);
         console.log($scope.loops);
+        
+        /*for (var i=test.length-1; i>=0; i--) {
+            for (var j=events.length-1; j>=0; j--) {
+                console.log(test[i].key);
+                console.log(events[j].key);
+                if(overlapLoops[i].key === events[j].key) {
+                    test.splice(test[i],1);
+                    events.splice(events[j],1);
+                }
+            }  
+        }
+        console.log(test);
+        for (var i=0; i<test.length; i++) {
+            $scope.loops.push({key: overlapLoops[i].key, name: overlapLoops[i].name, title: "null"});
+        //console.log(overlapLoops);
+        console.log($scope.loops);
+        }*/
     });
-    //--
     
-    /*userRef.on("value", function(userSnapshot) {
-        
-        loopUIDfromUser.length = 0;
-        //startTimes.length = 0;
-        
-        var user = userSnapshot.val();
-        //console.log(user);
-        //console.log(Object.keys(user).length);
-        for (var loopUID in user) {
-            if (user.hasOwnProperty(loopUID)) {
-                var index = loopUIDfromUser.indexOf(loopUID);
-                if (index = -1) {
-                    loopUIDfromUser.push(loopUID);
-                }
-            }
-        }
-        
-        //console.log(loopUIDfromUser);
-        //console.log(loopUIDfromUser.length);
-        
-        loops.on("value", function(loopSnapshot) {
-            loopObject.length = 0;
-            var loop = loopSnapshot.val();
-            //console.log(loop);
-            for (var loopUID in loop) {
-                if (loop.hasOwnProperty(loopUID)) {
-                    //console.log(loopUID);
-                    //console.log(loop[loopUID]);
-                    //loopObject.push({key: loopUID, name: loop[loopUID].name})
-                }
-            }
-            console.log(loopObject);
-            
-            var keyArray = [];
-            var tempStartTime = [];
-            
-            /*for (var i=0; i<loopUIDfromUser.length; i++) {
-                var event = events.child(loopUIDfromUser[i]);
-                event.on("value", function(snapshots) {
-                    var eventKey = snapshots.key();
-                    console.log(eventKey); //loop key
-                    var eventVal = snapshots.val();
-                    //console.log(eventVal); //event object
-                    for (var eventID in eventVal) {
-                        if (eventVal.hasOwnProperty(eventID)) {
-                            console.log(eventID); //event keys
-                            //console.log(eventVal[eventID].start);
-                            var dateInFull = new Date( eventVal[eventID].start);
-                            //console.log(dateInMS);
-                            var dateInMs = dateInFull.getTime();
-                            //console.log(dateInMs); //convert date into milliseconds
-                            
-                            var diff = dateInMs - currentDateInMS;
-                            console.log(diff); //compute difference between event time and current time in milliseconds
-                            
-                            var index = keyArray.indexOf(eventKey);
-                            console.log(index);
-                            
-                            if (index === -1 && diff > 0) {
-                                //push difference into tempStartTime array if eventKey is not present in keyArray i.e. first event evaluated
-                                keyArray.push(eventKey);
-                                tempStartTime.push(diff);
-                                console.log(tempStartTime[0]);
-                                startTimes.push({key: eventKey, start: eventVal[eventID].start, title: eventVal[eventID].title})
-                            } else if (index === 0 && diff > 0 && diff < tempStartTime[0]) {
-                                //else for event 2 onwards, to compare diff against diff in tempStartTime and overwrite
-                                console.log(true);
-                                tempStartTime.length = 0;
-                                tempStartTime.push(diff);
-
-                            }
-                            console.log(keyArray);
-                            console.log(tempStartTime);
-                            console.log(startTimes);
-
-                        }
-                    }
-                })
-                                
-            }*/
-            
-            //$q.all(startTimes).then(function() {
-                /*$scope.loops.length = 0;
-                angular.forEach(loopUIDfromUser, function (key) {
-                    for (var i=0; i<loopObject.length; i++) {
-                        if (key === loopObject[i].key) {
-                            /*event = events.child(loopUIDfromUser[i]);
-                            event.on("value", function(snapshot) {
-                                snapshot.forEach(function(childSnapshot) {
-                                    var key = childSnapshot.key();
-                                    console.log(key);
-                                    
-                                    var childData = childSnapshot.val();
-                                    console.log(childData);
-                                })
-                            })*/
-                            /*$scope.loops.push(loopObject[i]);
-                        }
-                    }
-                })
-                console.log($scope.loops);
-                    angular.forEach(startTimes, function (key,value) {
-                    console.log(key);
-                    //console.log(value);
-                })
-                
-            //}) 
-        })
-    })*/
-    
-    //compare event datetime with final array being one loop with one event with the latter being the upcoming
-    /*var events = new Firebase("https://vivid-heat-1234.firebaseio.com/events/");
-    
-    var currentDate = new Date();
-    var currentDateInMS = currentDate.getTime();
-    console.log(currentDateInMS);
-    
-    var diffInTime = [];
-    var nextEventTime = [];
-    
-    events.on("child_added", function (snapshots) {
-        var loopKey = snapshots.key();
-        //console.log(loopKey);
-        var loopEvents = snapshots.val();
-        console.log(loopEvents);
-        angular.forEach(loopEvents, function(key, value) {
-            //console.log(loopKey);
-            console.log(key.start); // returns object 
-            //console.log(value); // returns event unique ID
-            var d = new Date(key.start);
-            var e = d.getTime(); //time in milliseconds
-            var diff = e - currentDateInMS;
-            console.log(diff);
-            if (diff > 0) {
-                diffInTime.push(diff);
-            }
-            console.log(diffInTime);
-            diffInTime.sort();
-            console.log(diffInTime);
-            //var nextEventTime = Math.min(diffInTime);
-            //console.log(nextEventTime);
-            startTimes.push({loopID: loopKey, key: value, start: e, title: key.title});
-        })
-        $q.all(startTimes, diffInTime).then(function () {
-            //console.log(startTimes);
-            //console.log(diffInTime);
-        })
-        console.log(startTimes.length);
-        for (var i=0; i<startTimes.length; i++) {
-            var diff = startTimes[i].start - currentDateInMS;
-            console.log(diff);
-        }
-    })*/
-
     //scope for left side tab delete
     $scope.data = {
         showDelete: false
