@@ -37,7 +37,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('app.loops', {
         // abstract state will never be directly be activated but provides inherited properties to its common children states.
         abstract: true,
-        cache: false,
+        //cache: false,
         url: '/loops',
         // views property sets up multiple views within a single state.
         views: {
@@ -71,18 +71,6 @@ app.config(function($stateProvider, $urlRouterProvider) {
             //}
         //}
     })
-    
-    /*$stateProvider.state('app.loops.detail.members', {
-        url: '/members',
-        templateUrl: 'members.html',
-        controller: 'loopCtrl',
-    })
-    
-    $stateProvider.state('app.loops.detail.alerts', {
-        url: '/alerts',
-        templateUrl: 'alerts.html',
-        controller: 'loopCtrl',
-    })*/
     
 $stateProvider.state('app.link', {
         url: '/link',
@@ -166,7 +154,7 @@ app.controller('MainCtrl', function($scope) {
 })
 
 //this controller waits for the state to be completely resolved before instantiation
-app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService, loopsArray, membersArray, eventsArray, $q) {
+app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFactory, $ionicListDelegate, usersService, loopsArray, membersArray, eventsArray) {
     
     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
     
@@ -176,6 +164,16 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     var uid = userData.uid;
     console.log(uid); //success!
     
+    //retrieve user name
+    function getUserName(uid) {
+        var userObject = [];
+        return ref.child('/users').child(uid).once('value',function(userName) {
+            var userVal = userName.key();
+            
+            return userVal;
+        });
+    }
+    
     $scope.loops = [];
     var loopUIDfromUser = [];
     var loopObject = [];
@@ -184,9 +182,6 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     var loopWithoutEvent = [];
     
     //filter list of loops to show only those users are authorized to see
-    var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
-    var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
-    var events = new Firebase('https://vivid-heat-1234.firebaseio.com/events/')
     
     // get current time
     var currentDate = new Date();
@@ -398,6 +393,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     $scope.data = {
         showDelete: false
     };
+    
     // from TemplateUrl() method
     $ionicPopover.fromTemplateUrl('loops-popover.html', {
         scope: $scope
@@ -545,6 +541,9 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         var uid = userData.uid;
         //console.log(uid); //success!
         
+        var name = getUserName(uid);
+        console.log(name);
+        
         //generate random color for individual loop
         function getRandomColor() {
             var letters = '0123456789ABCDEF'.split('');
@@ -558,7 +557,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         
         // an atomic update to various locations upon introduction of a new loop
         // generate a new push ID for the new loop
-        var newLoopRef = root.child("/loops").push();
+        /*var newLoopRef = root.child("/loops").push();
         var newLoopKey = newLoopRef.key();
         
         // create the data we want to update
@@ -570,12 +569,14 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         root.child("members").child(newLoopKey).child(uid).set(true);
         root.child("users").child(uid).child("loops").child(newLoopKey).set(true); 
         
+        //root.child("changes").child(newLoopKey).child(Firebase.ServerValue.TIMESTAMP).set("Loop created by");
+        
         // perform a deep-path update
         root.update(newLoopName, function(error) {
             if (error) {
                 console.log("Error updating data:", error)
             }
-        });
+        });*/
     };
 })
 
@@ -1142,6 +1143,7 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
             } else {
                 console.log("Authenticated successfully with payload:", userData);
                 $state.go('app.mycalendar');
+                //$state.go('app.loops.index');
             }
         });
     };
