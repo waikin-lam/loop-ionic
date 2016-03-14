@@ -347,9 +347,12 @@
                         <br><br>
                         <div>
                           <ul class="list">
-                            
+                              <li class="item" ng-repeat="notification in notifications | orderBy: '-$id'">
+                                {{notification.$id | date: 'dd-MMM hh:mm a:'}} {{notification.$value}}
+                              </li>
                           </ul>
                         </div>
+                        <br><br><br>
                     </ion-slide>
                 </ion-slide-box>
             </ion-content>

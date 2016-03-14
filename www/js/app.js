@@ -165,15 +165,15 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
     console.log(uid); //success!
     
     //retrieve user name
-    function getUserName(uid) {
-        var userObject = [];
-        return ref.child('/users').child(uid).once('value',function(userName) {
-            var userVal = userName.key();
-            
-            return userVal;
-        });
-    }
+    var name = []; 
+    ref.child('/users').child(uid).once('value', function(snapshot) {
+        name.length = 0;
+        var userVal = snapshot.val();
+        name.push(userVal.name);
+    })
     
+    
+    //initialize arrays for list of loops
     $scope.loops = [];
     var loopUIDfromUser = [];
     var loopObject = [];
@@ -408,6 +408,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         var member = ref.child('/members').child(key).child(uid);
         var user = ref.child('/users').child(uid).child('/loops').child(key);
         var events = ref.child('/events').child(key);
+        var changes = ref.child('/changes').child(key);
         
         var confirmPopup = $ionicPopup.confirm({
             title: 'Delete Loop',
@@ -434,11 +435,13 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 lastMember.remove();
                 user.remove();
                 events.remove();
+                changes.remove();
                 return;
             } else {
                 console.log(false);
                 member.remove();
                 user.remove();
+                ref.child("changes").child(key).child(currentDateInMS).set(name + " " + "left the loop");
                 return;
             }
             })
@@ -458,7 +461,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 },
                 {
                   text: '<b>Save</b>',
-                  type: 'button-positive',
+                  type: 'button-dark',
                   onTap: function(e) {
                     if(!$scope.edit.name) {
                     //don't allow the user to close unless he enters new loop name
@@ -476,6 +479,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             if (res1 != null) {
                 var loopName = ref.child('/loops').child(key).child('name');
                 loopName.set(res1);
+                ref.child('changes').child(key).child(currentDateInMS).set(name + " " + "changed loop name to" + " " + res1);
                 $ionicListDelegate.closeOptionButtons();
             } else {
                 //do nothing
@@ -491,6 +495,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         var member = ref.child('/members').child(key).child(uid);
         var user = ref.child('/users').child(uid).child('/loops').child(key);
         var events = ref.child('/events').child(key);
+        var changes = ref.child('/changes').child(key);
         
         var confirmPopup = $ionicPopup.confirm({
             title: 'Delete Loop',
@@ -519,11 +524,13 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 lastMember.remove();
                 user.remove();
                 events.remove();
+                changes.remove();
                 return;
             } else if (totalMembers != 1 && res) {
                 console.log(false);
                 member.remove();
                 user.remove();
+                ref.child("changes").child(key).child(currentDateInMS).set(name + " " + "left the loop");
                 return;
             } else {
                 $ionicListDelegate.closeOptionButtons();
@@ -541,8 +548,11 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         var uid = userData.uid;
         //console.log(uid); //success!
         
-        var name = getUserName(uid);
-        console.log(name);
+        //get user name 
+        console.log(name); //success!
+        
+        //get current datetime
+        console.log(currentDateInMS);
         
         //generate random color for individual loop
         function getRandomColor() {
@@ -557,7 +567,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         
         // an atomic update to various locations upon introduction of a new loop
         // generate a new push ID for the new loop
-        /*var newLoopRef = root.child("/loops").push();
+        var newLoopRef = root.child("/loops").push();
         var newLoopKey = newLoopRef.key();
         
         // create the data we want to update
@@ -569,14 +579,14 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         root.child("members").child(newLoopKey).child(uid).set(true);
         root.child("users").child(uid).child("loops").child(newLoopKey).set(true); 
         
-        //root.child("changes").child(newLoopKey).child(Firebase.ServerValue.TIMESTAMP).set("Loop created by");
+        root.child("changes").child(newLoopKey).child(currentDateInMS).set("Loop created by " + name);
         
         // perform a deep-path update
         root.update(newLoopName, function(error) {
             if (error) {
                 console.log("Error updating data:", error)
             }
-        });*/
+        });
     };
 })
 
@@ -602,6 +612,28 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
               }
         })
       })
+    })
+    
+    //get auth uid and user name
+    var userID = {};
+    //retrieve user unique id from users node
+    var userData = ref.getAuth();
+    var userID = userData.uid;
+    console.log(userID); //success!
+    
+    // get current time
+    var currentDate = new Date();
+    var currentDateInMS = currentDate.getTime();
+    console.log(currentDateInMS);
+    
+    //retrieve user name
+    var root = new Firebase('https://vivid-heat-1234.firebaseio.com');
+    var userName = []; 
+    root.child('/users').child(userID).once('value', function(snapshot) {
+        userName.length = 0;
+        var userVal = snapshot.val();
+        userName.push(userVal.name);
+        console.log(userName);
     })
     
     //$scope to initialize today's date, to be passed to view
@@ -674,11 +706,13 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 events.on("value", function(eventSnapshots){
                     eventSnapshots.forEach(function(eventChild) {
                         
-                        var loopChild = eventChild.key();
-                        console.log(loopChild);
+                        var loopChildKey = eventChild.key();
+                        console.log(loopChildKey);
+                        var loopChildVal = eventChild.val();
+                        console.log(loopChildVal.title);
                         //console.log(loopChild.key());
                         
-                        if(event.$id === loopChild) {
+                        if(event.$id === loopChildKey) {
                             console.log(true); //true
                             //replace loopChild.start with event.start.d.toISOString()
                             var key = eventChild.key();
@@ -687,6 +721,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                             var newStart = event.start._d.toISOString();
                             console.log(newStart);
                             events.child(key).update({start: newStart});
+                            root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "rescheduled event:" + " " + loopChildVal.title);
                             return
                         } else {
                             // do nothing
@@ -749,7 +784,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 allDay: false,
                 color: loopColor.color
             })
-            //sort array of objects for view to show events in chronological order
+            root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "added new event:" + " " + eventName);
         })
         
         //re-up calendar with added event
@@ -766,6 +801,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     $scope.openModal = function(event, $index) {
         $scope.modal.show();
         
+        //edit event
         var key = event.key;
         $scope.eventSources = [$scope.events];
         $scope.updateEvent = function(updateTitle, updateDateTime, updateLocation) {
@@ -781,6 +817,8 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 $scope.eventsByDate.length = 0;
                 $scope.eventsByDate.push({title: update.title, location: update.location, start: datetime});
             })
+           //notification of event edit
+            root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "edited event: " + event.title);
         }  
     };
     $scope.closeModal = function() {
@@ -819,13 +857,18 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         });
             confirmPopup.then(function(res){
                 if(res) {
+                    console.log(event);
                     //console.log($index);
                     var eventKey = event.key;
                     //console.log(eventKey); //yields event key
                     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com/events/' + loopId + '/' + eventKey);
                     ref.remove();
+                    
                     //update $scope.eventsByDate to delete $index item from ng-repeat list in view
                     $scope.eventsByDate.splice($index, 1);
+                    
+                    //save changes in notifications
+                    root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "deleted event:" + " " + event.title);
                 } else {
                     $ionicListDelegate.closeOptionButtons();
                 }
@@ -853,6 +896,9 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
         ref.child("members").child(loopId).child(uid).set(true);
         ref.child("users").child(uid).child("loops").child(loopId).set(true);
+        
+        ref.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "added" + " " + name);
+        
         //alert popup upon successfully added user into loop
         var alertPopup = $ionicPopup.alert ({
             title: 'Alert',
@@ -860,8 +906,8 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         });
     }
     
-    $scope.membersOfLoop = [];
     //list of members of a loop
+    $scope.membersOfLoop = [];
     var membersRef = new Firebase("https://vivid-heat-1234.firebaseio.com/members/" + loopId);
     membersRef.on("value", function(snapshot) {
         $scope.membersOfLoop.length = 0;
@@ -878,6 +924,14 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         })
         //console.log($scope.membersOfLoop); //success
     })
+    
+    //list of notifications
+    $scope.notifications = [];
+    var notificationsRef = new Firebase("https://vivid-heat-1234.firebaseio.com/changes/" + loopId);
+    //limit to the 15 most recent notifications
+    var query = notificationsRef.limitToLast(15);
+    $scope.notifications = $firebaseArray(query);
+    console.log($scope.notifications);
 })
 
 app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray) {
