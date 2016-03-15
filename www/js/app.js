@@ -15,6 +15,12 @@ app.config(function($stateProvider, $urlRouterProvider) {
         templateUrl: 'sign-in.html',
         controller: 'SignInCtrl'
     })
+    
+    $stateProvider.state('forgotpassword', {
+        url: '/forgotpassword',
+        templateUrl: 'forgotpassword.html',
+        controller: 'forgotPasswordCtrl'
+    })
 
     $stateProvider.state('app', {
         abstract: true,
@@ -45,14 +51,14 @@ app.config(function($stateProvider, $urlRouterProvider) {
                 template: '<ion-nav-view></ion-nav-view>'
             }
         }   
-})
+    })
     
     $stateProvider.state('app.loops.index', {
         url: '',
         cache: false,
         templateUrl: 'loops.html',
         controller: 'LoopsCtrl'
-})
+    })
     
     $stateProvider.state('app.loops.detail', {
         url: '/:key',
@@ -72,7 +78,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
         //}
     })
     
-$stateProvider.state('app.link', {
+    $stateProvider.state('app.link', {
         url: '/link',
         views: {
             link: {
@@ -81,17 +87,30 @@ $stateProvider.state('app.link', {
             }
         }
     })
-    
-$stateProvider.state('app.settings', {
+
+    $stateProvider.state('app.settings', {
+        abstract: true,
         url: '/settings',
         views: {
             settings: {
-                templateUrl: 'settings.html',
-                controller: 'SettingsCtrl'
+                template: '<ion-nav-view></ion-nav-view>'
             }
-        }
+        }   
     })
-                         
+    
+    $stateProvider.state('app.settings.index', {
+        url: '',
+        //cache: false,
+        templateUrl: 'settings.html',
+        controller: 'SettingsCtrl'
+    })
+    
+    $stateProvider.state('app.settings.changepassword', {
+        url: '/changepassword',
+        cache: false,
+        templateUrl: 'changepassword.html',
+        controller: 'changePasswordCtrl'
+    })                      
 })
 
 //services are substitutable objects wired together using dependency injection and are used to organise and share code across app
@@ -587,6 +606,8 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 console.log("Error updating data:", error)
             }
         });
+        //clear input field
+        this.newLoop = null;
     };
 })
 
@@ -789,6 +810,11 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         
         //re-up calendar with added event
         $scope.eventSources = [$scope.events];
+        
+        //clear input fields
+        this.eventName = null;
+        this.eventDate = null;
+        this.eventLocation = null;
     };
     
     //$ionicModal for event editing
@@ -819,6 +845,11 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
             })
            //notification of event edit
             root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "edited event: " + event.title);
+            
+            //clear fields
+            this.updateTitle = null;
+            this.updateDateTime = null;
+            this.updateLocation = null;
         }  
     };
     $scope.closeModal = function() {
@@ -887,6 +918,8 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
             }
         }
         console.log($scope.user);
+        //clear input field
+        this.email = null;
     }
     
     //add selected user into Firebase
@@ -902,7 +935,8 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         //alert popup upon successfully added user into loop
         var alertPopup = $ionicPopup.alert ({
             title: 'Alert',
-            template: 'Successfully added user into loop'
+            template: 'Successfully added user into loop',
+            okType: 'button-dark'
         });
     }
     
@@ -1151,13 +1185,15 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
                 console.log("Error creating user:", error);
                 var alertPopup = $ionicPopup.alert ({
                     title: 'Unable to sign up',
-                    template: error
+                    template: error,
+                    okType: 'button-dark'
                 });
             } else {
                 //alert popup
                 var alertPopup = $ionicPopup.alert ({
                     title: 'Thank you for signing up',
-                    template: 'Please proceed to login'
+                    template: 'Please proceed to login',
+                    okType: 'button-dark'
                 });
                 console.log("Successfully created user account with uid:", userData);
                 console.log(userData.uid); //success
@@ -1176,10 +1212,11 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
                         console.log("Error registering new user:", error);
                     }
                 })
-                
-               //To alert successful signup and proceed to login (limited by username.uid apparent bug??) //$state.go('app.loops.index');
             }
         });
+        //clear input fields
+        //this.data.email = null;
+        //this.data.password = null;
     };
     
     $scope.loginEmail = function() {
@@ -1200,6 +1237,9 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
                 //$state.go('app.loops.index');
             }
         });
+        //clear input fields
+        //this.data.email = null;
+        //this.data.password = null;
     };
 })
 
@@ -1210,11 +1250,106 @@ app.controller('LinkCtrl', function($scope) {
 
 //controller for settings tab
 app.controller('SettingsCtrl', function($scope, $state) {
+    var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+    //retrieve user name
+    var uid = {};
+    //retrieve user unique id from users node
+    var userData = ref.getAuth();
+    var uid = userData.uid;
+    //console.log(uid); //success!
+    $scope.userName = [];
+    ref.child("users").child(uid).once("value", function(snapshot) {
+        var val = snapshot.val();
+        $scope.userName.push(val.name);
+    })
+    
+    //sign out
     $scope.logOut = function() {
-        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
         ref.unauth();
         $state.go('signin');
     };
+})
+
+//controller for changePassword page
+app.controller('changePasswordCtrl', function($scope, $ionicPopup) {
+    var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+    //retrieve user email
+    var uid = {};
+    //retrieve user unique id from users node
+    var userData = ref.getAuth();
+    var uid = userData.uid;
+    console.log(uid); //success!
+    
+    $scope.userEmail = [];
+    ref.child("users").child(uid).once("value", function(snapshot){
+        var val = snapshot.val();
+        $scope.userEmail.push(val.email);
+    })
+    //console.log(val);
+    console.log($scope.userEmail); //empty
+    
+    //change password
+    $scope.changePassword = function changePassword(current, changeTo) {
+        //console.log(current); //current password
+        //console.log(changeTo); //new desired password
+        ref.child("users").child(uid).once("value", function (snapshot){
+            var val = snapshot.val();
+            var email = val.email;
+            ref.changePassword({
+                email: email,
+                oldPassword: current,
+                newPassword: changeTo 
+            }, function(error) {
+                if (error === null) {
+                    console.log("Password successfully changed");
+                    var alertPopup = $ionicPopup.alert ({
+                        title: 'Change password',
+                        template: 'Password successfully changed', 
+                        okType: 'button-dark'
+                    })
+                } else {
+                    console.log("Error changing password:", error );
+                    var alertPopup = $ionicPopup.alert ({ 
+                        title: 'Change password',
+                        template: error,
+                        okType: 'button-dark'
+                    })
+                }
+            })
+        })
+        //clear input fields
+        this.existing.Password = null;
+        this.new.Password = null;
+    }
+})
+
+//forgot password controller
+app.controller('forgotPasswordCtrl', function($scope, $ionicPopup) {
+    var ref = new Firebase('https://vivid-heat-1234.firebaseio.com')
+    $scope.retrievePassword = function retrievePassword(email) {
+        console.log(email);
+        ref.resetPassword({
+            email: email 
+        }, function(error) {
+            if (error === null) {
+                console.log("Password reset email sent successfully");
+                var alertPopup = $ionicPopup.alert ({
+                    title: 'Retrieve password',
+                    template: 'Password reset email sent successfully. Please check your email.',
+                    okType: 'button button-outline button-dark'
+                })
+            } else {
+                console.log("Error sending password reset email:", error);
+                var alertPopup = $ionicPopup.alert ({
+                    title: 'Retrieve password',
+                    template: error,
+                    okType: 'button button-outline button-dark'
+                })
+            }
+        })
+        //clear input field
+        this.forgotPassword.email = null;
+    }
 })
 
 .run(function($ionicPlatform) {

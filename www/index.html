@@ -61,8 +61,8 @@
                 <br>
                 <br>
                 <br>
-              <div class="padding">
-                <img class="img-center" src="img/Loop.jpeg" alt="">
+              <div class="col text-center">
+                <img src="img/Loop.jpeg" alt="">
               </div>
               <div class="list list-inset">
                 <label class="item item-input">
@@ -79,10 +79,29 @@
                   <button class="button button-large button-outline button-dark" ng-click="loginEmail()">Log-In </button>
                   <br>
                   <br>
-                <p class="text-center">Forgot password</p>
+                <a class="text-center" ui-sref="forgotpassword">Forgot password</a>
               </div>
             </ion-content>  
         </ion-view>
+      </script>
+      
+      <script type="text/ng-template" id="forgotpassword.html">
+        <ion-content>
+            <div class="bar bar-header">
+                <button class="button icon ion-ios-arrow-back" ui-sref="signin"></button>
+                <h1 class="title">Retrieve password</h1>
+            </div>
+            <br><br>
+            <div class="list">
+                <div class="item item-divider">Enter your email</div>
+                <div class="item item-input-inset">
+                    <label class="item-input-wrapper">
+                        <input type="email" placeholder="Email" ng-model="forgotPassword.email">
+                    </label>
+                    <button class="button button-small" ng-click="retrievePassword(forgotPassword.email)">Submit</button>
+                </div>
+            </div>
+        </ion-content>
       </script>
       
       <script type="text/ng-template" id="main.html">
@@ -102,9 +121,9 @@
             
             <!-- ui-sref is a directive that binds a link to a state -->
             
-          <ion-tab title="Link" icon="ion-link" ui-sref="app.link">
+          <!--<ion-tab title="Link" icon="ion-link" ui-sref="app.link">
             <ion-nav-view name="link"></ion-nav-view>
-          </ion-tab>
+          </ion-tab>-->
           
           <ion-tab title="Settings" icon="ion-gear-a" ui-sref="app.settings">
             <ion-nav-view name="settings"></ion-nav-view>
@@ -312,8 +331,51 @@
       <script type="text/ng-template" id="settings.html">
         <ion-view title="Settings">
         <ion-content>
-          <button class="button button-outline button-assertive" ng-click="logOut()">Sign-out</button>
+            <div class="item item-divider"></div>
+            <div class="list">
+                <a class="item item-avatar" href="#">
+                    <img src ="img/Loop.jpeg">
+                    <h2>{{userName.join(", ")}}</h2>
+                </a>
+            <!--</div>-->
+            <div class="item item-divider"></div>
+            <!--<div class="list">-->
+                <a class="item item-icon-left item-icon-right" ui-sref="app.settings.changepassword">
+                    <i class="icon ion-lock-combination"></i>
+                    Change Password
+                    <i class="icon ion-ios-arrow-right"></i>
+                </a>
+                <a class = "item item-icon-left" ng-click="logOut()">
+                    <i class="icon ion-log-out"></i>
+                    Log-out
+                </a>
+                <!--<button class="button button-full button-assertive" ng-click="logOut()">Sign-out</button>-->
+            </div>
         </ion-content>
+        </ion-view>
+      </script>
+      
+      <script type="text/ng-template" id="changepassword.html">
+        <ion-view>
+            <ion-nav-title>Change Password</ion-nav-title>
+            <ion-content>
+                <div class="list">
+                    <div class="item item-divider">
+                    Your email
+                    </div>
+                    <div class="item">{{userEmail.join(", ")}}</div>
+                    <div class="item item-divider"></div>
+                    <label class="item item-input item-stacked-label">
+                        <span class="input-label">Current password</span>
+                        <input type="password" ng-model="existing.Password">
+                    </label>
+                    <label class="item item-input item-stacked-label">
+                        <span class="input-label">New password</span>
+                        <input type="password" ng-model="new.Password">
+                    </label>
+                    <button class="button button-block button-dark" ng-click="changePassword(existing.Password, new.Password)">Confirm</button>
+                </div>
+            </ion-content>
         </ion-view>
       </script>
       
@@ -358,24 +420,6 @@
             </ion-content>
         </ion-modal-view>
       </script>
-      
-      <!--<script type="text/ng-template" id="members.html">
-            <ion-content>
-                <ul class="list">
-                    <li class="item" ng-repeat="member in membersOfLoop">
-                        {{member.name}}
-                    </li>
-                </ul>                        
-            </ion-content>
-      </script>
-      
-      <script type="text/ng-template" id="alerts.html">
-        <ion-view>
-            <ion-content>
-                Alerts
-            </ion-content>  
-        </ion-view>
-      </script>-->
       
       <!-- script for edit modal in Loop view -->
       <script type="text/ng-template" id="edit-modal.html">

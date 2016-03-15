@@ -1,13 +1,4 @@
 /* Empty. Add your own CSS if you like */
-.img-circle {
-    border-radius: 50%;
-}
-
-img-center {
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
-}
 
 .popover {
     height: auto !important;
