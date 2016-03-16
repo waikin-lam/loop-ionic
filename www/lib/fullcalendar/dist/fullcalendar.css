@@ -10,12 +10,16 @@
 	text-align: left;
 }
 
+.fc h2 {
+    font-size: 1.6em;
+}
+
 .fc-rtl {
 	text-align: right;
 }
 
 body .fc { /* extra precedence to overcome jqui */
-	font-size: 1em;
+	font-size: 0.95em;
 }
 
 
