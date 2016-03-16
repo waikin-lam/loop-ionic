@@ -1,4 +1,7 @@
 /* Empty. Add your own CSS if you like */
+p.exactFit {
+    word-wrap: break-word;
+}
 
 .popover {
     height: auto !important;

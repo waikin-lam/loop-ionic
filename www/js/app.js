@@ -963,7 +963,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     $scope.notifications = [];
     var notificationsRef = new Firebase("https://vivid-heat-1234.firebaseio.com/changes/" + loopId);
     //limit to the 15 most recent notifications
-    var query = notificationsRef.limitToLast(15);
+    var query = notificationsRef.limitToLast(10);
     $scope.notifications = $firebaseArray(query);
     console.log($scope.notifications);
 })
@@ -1065,8 +1065,8 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     //config calendar
     $scope.uiConfig = {
         calendar: {
-            //height: 350,
-            contentheight: "auto",
+            height: "auto",
+            //contentheight: "auto",
             fixedWeekCount: false,
             editable: false,
             timezone: 'local',
@@ -1365,7 +1365,9 @@ app.controller('forgotPasswordCtrl', function($scope, $ionicPopup) {
       cordova.plugins.Keyboard.disableScroll(true);
     }
     if(window.StatusBar) {
-      StatusBar.styleDefault();
+      //StatusBar.styleDefault();
+        //change status bar text color to light text, for dark backgrounds
+        StatusBar.styleLightContent();
     }
   });
 })
@@ -1403,10 +1405,17 @@ app.controller('forgotPasswordCtrl', function($scope, $ionicPopup) {
             cordova.plugins && cordova.plugins.Keyboard && cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
         }
         if(window.StatusBar) {
-            StatusBar.styleDefault();
+            //StatusBar.styleDefault();
+            StatusBar.styleColor(2);
     }
     });
 })
+
+//cordova status bar
+/*.run(function($cordovaStatusbar) {
+    $cordovaStatusbar.overlaysWebView(true);
+    $cordovaStatusbar.style(1);
+})*/
 
 //keyboard custom directive
 .directive('input', function($timeout) {

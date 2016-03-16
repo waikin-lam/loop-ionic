@@ -237,7 +237,7 @@
                 <!--<ion-checkbox ng-repeat="(key, loop) in loops" name="filter" data-type={{key}}>
                 {{loop.name}}
                 </ion-checkbox>-->
-                <ion-checkbox ng-repeat="loop in loops" name="uncheckedLoops[]" value="{{loop.key}}" ng-click="uncheck(loop.key)">{{loop.name}}
+                <ion-checkbox class="checkbox-dark" ng-repeat="loop in loops" name="uncheckedLoops[]" value="{{loop.key}}" ng-click="uncheck(loop.key)">{{loop.name}}
                 </ion-checkbox>
                 <!--<div class="item item-button center">
                     <button class="button button-block button-outline button-positive" type="submit" ng-click="isChecked()">
@@ -273,7 +273,7 @@
                     <ion-item ng-repeat="loop in loops" class="item item-avatar" href="#/loops/{{loop.key}}">
                         <img src="img/Loop.jpeg">
                         <span>{{ loop.name }}</span><br>
-                        <p>next event: {{loop.title}} {{loop.start | date: 'dd-MMM'}}</p>
+                        <p class="exactFit">{{loop.start | date: 'dd-MMM'}}: {{loop.title}} </p>
                         <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(loop.key)"></ion-delete-button>
                         <ion-option-button class="button-dark" ng-click="editPopup(loop.key)">Edit</ion-option-button>
                         <ion-option-button class="button-assertive" ng-click="showConfirm(loop.key)">Delete</ion-option-button>
@@ -290,7 +290,7 @@
       <!-- end of popup -->
       
       <script type="text/ng-template" id="loop.html">
-            <ion-view>
+            <ion-view can-swipe-back="false">
               <ion-nav-title ng-click="openuserModal()">{{title.join(", ")}}</ion-nav-title>
                 <ion-nav-buttons side="secondary">
                     <button class="button button-clear ion-person-add" ng-click="addUserPopup.show($event)"></button>
@@ -306,7 +306,7 @@
                     <div class="item item-divider">
                         {{todaysDate.join(", ")}}
                     </div>
-                    <ion-item class="item" ng-repeat="event in eventsByDate">
+                    <ion-item class="item" style="font-size: 1em" ng-repeat="event in eventsByDate">
                         <span>{{event.time}}</span>
                         <span>{{event.title}}</span>
                         <span>@ {{event.location}}</span>
@@ -390,16 +390,16 @@
                 <h1 class="title">Loop Information</h1>
                 <button class="button button-icon ion-close-circled" ng-click="closeuserModal()"></button>
             </ion-header-bar>
-            <ion-content class="has-header">
+            <ion-content>
                 <ion-slide-box>
                     <ion-slide>
-                        <div class="bar bar-header bar-stable">
-                            <h3 class="title">Members</h3>
+                        <div class="has-header">
+                            <h4 class="title" align="center">Members</h4>
                         </div>
-                        <br><br>
+                        <!--<br><br>-->
                         <div>
                           <ul class="list">
-                            <li class="item" ng-repeat="member in membersOfLoop">
+                            <li class="item" style="font-size: 1em" ng-repeat="member in membersOfLoop">
                                 {{member.name}}
                             </li>
                           </ul>
@@ -407,13 +407,13 @@
                         <br><br><br>
                     </ion-slide>
                     <ion-slide>
-                        <div class="bar bar-header bar-stable">
-                            <h3 class="title">Notifications</h3>
+                        <div class="has-header">
+                            <h4 class="title" align="center">Notifications</h4>
                         </div>
-                        <br><br>
+                        <!--<br><br>-->
                         <div>
                           <ul class="list">
-                              <li class="item" ng-repeat="notification in notifications | orderBy: '-$id'">
+                              <li class="item" style="font-size: 1em" ng-repeat="notification in notifications | orderBy: '-$id'">
                                 {{notification.$id | date: 'dd-MMM hh:mm a:'}} {{notification.$value}}
                               </li>
                           </ul>
