@@ -178,7 +178,7 @@
                 <form name="addLoopForm" ng-submit="addLoop(newLoop)">
                 <div class="list">
                   <label class="item item-input item-stacked-label">
-                    <span class="input label">Name of Loop</span>
+                    <span class="input label">Name</span>
                       <input type="text" placeholder="Buddies" ng-model="newLoop" ng-minlength="1" ng-required="true">
                   </label>
                 </div>
@@ -413,7 +413,7 @@
                         <!--<br><br>-->
                         <div>
                           <ul class="list">
-                              <li class="item" style="font-size: 1em" ng-repeat="notification in notifications | orderBy: '-$id'">
+                              <li class="item item-text-wrap" style="font-size: 1em" ng-repeat="notification in notifications | orderBy: '-$id'">
                                 {{notification.$id | date: 'dd-MMM hh:mm a:'}} {{notification.$value}}
                               </li>
                           </ul>
@@ -437,16 +437,16 @@
                 <form ng-submit="updateEvent(updateTitle, updateDateTime, updateLocation)">
                 <div class="list">
                     <label class="item item-input item-stacked-label">
-                        <span class="input-label">Event Title</span>
-                        <input type="text" placeholder="" ng-model="updateTitle">
+                        <span class="input-label">Name</span>
+                        <input type="text" ng-model="updateTitle">
                     </label>
                     <label class="item item-input item-stacked-label">
                         <span class="input-label">Date & Time</span>
-                        <input type="datetime-local" placeholder="" ng-model="updateDateTime">
+                        <input type="datetime-local" ng-model="updateDateTime">
                     </label>
                     <label class="item item-input item-stacked-label">
                         <span class="input-label">Location</span>
-                        <input type="text" placeholder="" ng-model="updateLocation">
+                        <input type="text" ng-model="updateLocation">
                     </label>
                     <button class="button button-block button-dark" ng-click="closeModal()">Update</button>
                 </div>

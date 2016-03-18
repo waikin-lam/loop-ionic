@@ -826,26 +826,100 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     });
     $scope.openModal = function(event, $index) {
         $scope.modal.show();
+        //console.log(event); //logs event object
+        //console.log(event.title); //logs event title
+        //console.log(event.start); //logs event start
+        //console.log(event.location); //logs event location
         
-        //edit event
+        //edit event; it is possible to proceed even with one input only with the other 2 fields remaining the same
         var key = event.key;
         $scope.eventSources = [$scope.events];
         $scope.updateEvent = function(updateTitle, updateDateTime, updateLocation) {
-            var datetime = updateDateTime.toISOString();
             var update = $scope.events.$getRecord(key);
-            update.title = updateTitle;
-            update.start = datetime;
-            update.location = updateLocation;
-            $scope.events.$save(update).then(function() {
+            console.log(updateTitle);
+            console.log(updateDateTime);
+            console.log(updateLocation);
+            
+            if (updateTitle == null && updateDateTime == null && updateLocation == null) {
+                //combination 1 - no input at all
+                console.log(1);
+                update.title = event.title;
+                update.start = event.start;
+                update.location = event.location;
+            } else if (updateTitle != null && updateDateTime != null && updateLocation != null) {
+                //combination 2 - all input
+                console.log(2);
+                var datetime = updateDateTime.toISOString();
+                update.title = updateTitle;
+                update.start = datetime;
+                update.location = updateLocation;
+            } else if (updateTitle != null && updateDateTime != null && updateLocation == null) {
+                //combination 3 - title and datetime input
+                console.log(3);
+                var datetime = updateDateTime.toISOString();
+                update.title = updateTitle;
+                update.start = datetime;
+                update.location = event.location;
+            } else if (updateTitle != null && updateDateTime == null && updateLocation != null) {
+                //combination 4 - title and location input
+                console.log(4);
+                update.title = updateTitle;
+                update.start = event.start;
+                update.location = updateLocation;
+            } else if (updateTitle == null && updateDateTime != null && updateLocation != null) {
+                //combination 5 - datetime and location input
+                console.log(5);
+                var datetime = updateDateTime.toISOString();
+                update.title = event.title;
+                update.start = datetime;
+                update.location = updateLocation;
+            } else if (updateTitle != null && updateDateTime == null && updateLocation == null) {
+                //combination 6 - title input only
+                console.log(6);
+                update.title = updateTitle;
+                update.start = event.start;
+                update.location = event.location;
+            } else if (updateTitle == null && updateDateTime != null && updateLocation == null) {
+                //combination 7 - datetime input only
+                console.log(7);
+                var datetime = updateDateTime.toISOString();
+                update.title = event.title;
+                update.start = datetime;
+                update.location = event.location;
+            } else if (updateTitle == null && updateDateTime == null && updateLocation != null) {
+                //combination 8 - location input only
+                console.log(8);
+                update.title = event.title;
+                update.start = event.start;
+                update.location = updateLocation;
+            }            
+            console.log(update.title);
+            console.log(update.start);
+            console.log(update.location);
+            $scope.events.$save(update).then(function(sortEvents) {
                 //alert("data has been updated");
-                $scope.eventSources = [$scope.events];
-                console.log($scope.events);
                 $scope.eventsByDate.length = 0;
                 $scope.eventsByDate.push({title: update.title, location: update.location, start: datetime});
+                
+                //notification of event edit
+                root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "edited event: " + event.title);
+                
+                //clear [$scope.events] & reload events
+                //console.log($scope.events.length);
+                $scope.events.splice(0, $scope.events.length);
+                //console.log($scope.events);
+                
+                var newSortEvents = events.orderByChild("start");
+                $scope.reloadEvents = $firebaseArray(newSortEvents);
+                $scope.reloadEvents.$loaded().then(function(events) {
+                    //console.log(events);
+                    //console.log(events.length);
+                    for(var i=0; i<events.length; i++) {
+                        $scope.events.push(events[i]);
+                    }
+                    //console.log($scope.events);
+                })  
             })
-           //notification of event edit
-            root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "edited event: " + event.title);
-            
             //clear fields
             this.updateTitle = null;
             this.updateDateTime = null;
