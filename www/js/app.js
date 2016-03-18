@@ -712,7 +712,8 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 }
                 return true;
             }
-        
+            
+            loopWithoutEvent.length = 0;
             angular.forEach(loopIDfrLoops, function (key, value) {
                 var object = key;
                 var loopID = object.key;
@@ -724,7 +725,6 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                     // if {events} is empty
                     if(isEmpty(events)) {
                         console.log(object);
-                        loopWithoutEvent.length = 0;
                         loopWithoutEvent.push({key: object.key, name: object.name, title: 'null'});
                         //console.log("events is empty");
                     }
