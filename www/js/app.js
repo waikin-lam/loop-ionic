@@ -389,23 +389,6 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         
         $scope.loops = loopContents.concat(emptyLoop);
         console.log($scope.loops);
-        
-        /*for (var i=test.length-1; i>=0; i--) {
-            for (var j=events.length-1; j>=0; j--) {
-                console.log(test[i].key);
-                console.log(events[j].key);
-                if(overlapLoops[i].key === events[j].key) {
-                    test.splice(test[i],1);
-                    events.splice(events[j],1);
-                }
-            }  
-        }
-        console.log(test);
-        for (var i=0; i<test.length; i++) {
-            $scope.loops.push({key: overlapLoops[i].key, name: overlapLoops[i].name, title: "null"});
-        //console.log(overlapLoops);
-        console.log($scope.loops);
-        }*/
     });
     
     //scope for left side tab delete
@@ -435,7 +418,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             cancelText: 'No',
             cancelType: 'button-default',
             okText: 'Yes',
-            okType: 'button-positive'
+            okType: 'button-dark'
         });
         
         confirmPopup.then(function(res) {
@@ -531,31 +514,31 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             var loopers = new Firebase("https://vivid-heat-1234.firebaseio.com/members/" + key);
     
             loopers.once("value", function(snapshot) {
-            var membersOfLoop = snapshot.val();
-            //console.log(membersOfLoop);
-            var totalMembers = Object.keys(membersOfLoop).length;
-            console.log(totalMembers);
+                var membersOfLoop = snapshot.val();
+                //console.log(membersOfLoop);
+                var totalMembers = Object.keys(membersOfLoop).length;
+                console.log(totalMembers);
                 
-            if(totalMembers==1 && res) {
-                //to delete loop and associated data linkages
-                console.log(true);
-                loopKey.remove();
-                lastMember.remove();
-                user.remove();
-                events.remove();
-                changes.remove();
-                return;
-            } else if (totalMembers != 1 && res) {
-                console.log(false);
-                member.remove();
-                user.remove();
-                ref.child("changes").child(key).child(currentDateInMS).set(name + " " + "left the loop");
-                return;
-            } else {
-                $ionicListDelegate.closeOptionButtons();
-            }
-        });
-    })
+                if(totalMembers==1 && res) {
+                    //to delete loop and associated data linkages
+                    console.log(true);
+                    loopKey.remove();
+                    lastMember.remove();
+                    user.remove();
+                    events.remove();
+                    changes.remove();
+                    return;
+                } else if (totalMembers != 1 && res) {
+                    console.log(false);
+                    member.remove();
+                    user.remove();
+                    ref.child("changes").child(key).child(currentDateInMS).set(name + " " + "left the loop");
+                    return;
+                } else {
+                    $ionicListDelegate.closeOptionButtons();
+                }
+            });
+        })
     }
     
     //function to add loop to list and save it to multiple locations in the database
@@ -586,6 +569,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         
         // an atomic update to various locations upon introduction of a new loop
         // generate a new push ID for the new loop
+        
         var newLoopRef = root.child("/loops").push();
         var newLoopKey = newLoopRef.key();
         
@@ -597,7 +581,6 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         };
         root.child("members").child(newLoopKey).child(uid).set(true);
         root.child("users").child(uid).child("loops").child(newLoopKey).set(true); 
-        
         root.child("changes").child(newLoopKey).child(currentDateInMS).set("Loop created by " + name);
         
         // perform a deep-path update
@@ -608,7 +591,176 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         });
         //clear input field
         this.newLoop = null;
-    };
+        
+        //------- Copied piece of code to call data from Firebase and filter loops
+        var loopIDfromUsers = getLoopUIDfromUserPromise(uid);
+    
+        // get corresponding loopUIDs from loops tree and save corresponding loop key and loop name into [loopObject] 
+        // the length of [loopObject] array should be the same as the [loopUIDfromUser] array
+        var loopIDfromLoops = loopIDfromUsers.then(function(loopIDfrUser) {
+            //console.log(loopIDfrUser); // loop IDs of which user is a member of
+            loopObject.length = 0;
+            loopsToDisplay.length = 0;
+            return ref.child('loops').once('value').then(function(loopIDfrLoops){
+                var loopsTree = loopIDfrLoops.val();
+                //console.log(loopsTree);
+                angular.forEach(loopsTree, function (key, value) {
+                    //console.log(key); //yields loop object 
+                    //console.log(value); //yields loopID
+                    loopObject.push({key: value, name: key.name});
+                })
+                //console.log(loopObject);
+                angular.forEach(loopIDfrUser, function (key) {
+                    //console.log(key);
+                    for (var i=0; i<loopObject.length; i++) {
+                        if (key === loopObject[i].key) {
+                            loopsToDisplay.push(loopObject[i]);
+                        }
+                    }
+                })
+                //console.log(loopsToDisplay);
+                return loopsToDisplay;
+            });
+        })
+    
+        // get events by loopID and compare each events against one another to obtain the closest upcoming event for display on view
+        var eventsTree = loopIDfromUsers.then(function(loopIDfrUser){
+            var loops = [];
+            eventsObject.length = 0;
+            //console.log(loopIDfrUser);
+            for (var i=0; i<loopIDfrUser.length; i++) {
+                var key = loopIDfrUser[i];
+                //console.log(key)
+            }
+            angular.forEach(loopIDfrUser, function (key) {
+                var keyArray = [];
+                var tempStartTime = [];
+                var tempEventObject = [];
+            
+                return ref.child('events').child(key).once('value').then(function(events) {
+                    //console.log(key);
+                    var events = events.val();
+                    //console.log(events);
+               
+                    for (var eventID in events) {
+                        if (events.hasOwnProperty(eventID)) {
+                            //console.log(eventID); // logs eventID
+                            //console.log(events[eventID]); //logs event object one by one, by loop ID
+                        
+                            //convert event start time to that in milliseconds
+                            var dateInFull = new Date(events[eventID].start);
+                            var dateInMS = dateInFull.getTime();
+                            //console.log(dateInMS);
+                        
+                            // compare event start time to current start time, both in ms, with - implying event is in the past, and + implying upcoming event(s)
+                            var diff = dateInMS - currentDateInMS;
+                            //console.log(diff);
+                        
+                            // check if loop has already an existing event with a dummy [keyArray] array
+                            var index = keyArray.indexOf(key);
+                            //console.log(index);
+                        
+                            // if loop has not been evaluated before and the event is one in the future
+                            if (index === -1 && diff > 0) {
+                                //console.log(false);
+                                keyArray.push(key);
+                                //console.log(keyArray);
+                                tempStartTime.push(diff);
+                                //console.log(tempStartTime);
+                                tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
+                                //console.log(tempEventObject);
+                            
+                            } else if (index > -1 && diff > 0 && diff < tempStartTime[0]) {
+                                //console.log(true);
+                                tempStartTime.length = 0;
+                                tempStartTime.push(diff);
+                                //console.log(tempStartTime);
+                                tempEventObject.length = 0;
+                                tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
+                                //console.log(tempEventObject);
+                            } else if (index === -1 && diff < 0) {
+                                tempEventObject.length = 0;
+                                tempEventObject.push({key: key, title: "null"});
+                                //console.log(tempEventObject);
+                            }
+                            //console.log(eventsObject);
+                        } else {
+                        //
+                        }
+                    }
+                //console.log(tempEventObject);
+                //to filter out loops with no events yet
+                if (tempEventObject.length === 1) {
+                    eventsObject.push(tempEventObject[0]);
+                    }
+                //console.log(eventsObject);
+                })
+            return eventsObject;
+            })  
+        });
+    
+        //method to filter loops without a single event
+        var loopWithoutEvents = loopIDfromLoops.then(function(loopIDfrLoops) {
+            var loopID = [];
+               
+            //utility function to check if an object is empty
+            function isEmpty(obj) {
+                for (var key in obj) {
+                    if (obj.hasOwnProperty(key))
+                        return false;
+                }
+                return true;
+            }
+        
+            angular.forEach(loopIDfrLoops, function (key, value) {
+                var object = key;
+                var loopID = object.key;
+            
+                return ref.child('events').child(loopID).once('value').then(function(events){
+                    var events = events.val();
+                    console.log(events);
+                
+                    // if {events} is empty
+                    if(isEmpty(events)) {
+                        console.log(object);
+                        loopWithoutEvent.length = 0;
+                        loopWithoutEvent.push({key: object.key, name: object.name, title: 'null'});
+                        //console.log("events is empty");
+                    }
+                    console.log(loopWithoutEvent);
+                })
+                return loopWithoutEvent;
+            })
+        })
+    
+        Promise.all([loopIDfromUsers, loopIDfromLoops, eventsObject, loopWithoutEvent]).then(function(results) {
+            var loopContents = [];
+        
+            console.log(results);
+            var overlapLoops = results[1];
+            var events = results[2];
+            console.log(overlapLoops);
+            console.log(events);
+            var test = overlapLoops.concat(events);
+            console.log(test);
+            for (var i=0; i<test.length; ++i) {
+                for (var j=i+1; j<test.length; ++j) {
+                    if(test[i].key === test[j].key) {
+                        loopContents.push({key: test[i].key, name: test[i].name, title: test[j].title, start: test[j].start});
+                        test.splice(j--, 1);
+                    }
+                }  
+            }
+            //console.log(test);
+            console.log(loopContents);
+            var emptyLoop = results[3];
+            console.log(emptyLoop);
+        
+            $scope.loops = loopContents.concat(emptyLoop);
+            console.log($scope.loops);
+        });
+        //------- end of copied code
+    }
 })
 
 app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeout, $ionicModal, $ionicPopup, $firebaseArray, $firebaseObject, $ionicListDelegate, usersService, $ionicSlideBoxDelegate) {
@@ -920,7 +1072,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                     //console.log($scope.events);
                 })  
             })
-            //clear fields
+            //clear inputfields
             this.updateTitle = null;
             this.updateDateTime = null;
             this.updateLocation = null;
