@@ -404,6 +404,10 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         $scope.popover = popover;
     });
     
+    $scope.closePopover = function() {
+        $scope.popover.hide();
+    };
+    
     //scope onItemDelete minus tab on nav-bar, with popup confirm
     $scope.onItemDelete = function(key) {
         var loopKey = ref.child('/loops').child(key);
@@ -592,6 +596,9 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         });
         //clear input field
         this.newLoop = null;
+        
+        //close popover on submit
+        $scope.closePopover();
         
         //------- Copied piece of code to call data from Firebase and filter loops
         var loopIDfromUsers = getLoopUIDfromUserPromise(uid);
@@ -940,6 +947,11 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         $scope.addUserPopup = addUserPopup;
     });
     
+    // function to close popover
+    $scope.closePopover = function() {
+        $scope.popover.hide();
+    };
+    
     //function to add event details to loop in Firebase
     $scope.addEvent = function(eventName, eventDate, eventLocation) {
         //extract color from /loops tree
@@ -968,6 +980,9 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         this.eventName = null;
         this.eventDate = null;
         this.eventLocation = null;
+        
+        //close popover
+        $scope.closePopover();
     };
     
     //$ionicModal for event editing
