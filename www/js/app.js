@@ -16,6 +16,12 @@ app.config(function($stateProvider, $urlRouterProvider) {
         controller: 'SignInCtrl'
     })
     
+    $stateProvider.state('signup', {
+        url: '/sign-up',
+        templateUrl: 'signup.html',
+        controller: 'signUpCtrl'
+    })
+    
     $stateProvider.state('forgotpassword', {
         url: '/forgotpassword',
         templateUrl: 'forgotpassword.html',
@@ -293,16 +299,17 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                         
                         // if loop has not been evaluated before and the event is one in the future
                         if (index === -1 && diff > 0) {
-                            //console.log(false);
+                            console.log(false);
                             keyArray.push(key);
                             //console.log(keyArray);
+                            tempEventObject.length = 0;
                             tempStartTime.push(diff);
                             //console.log(tempStartTime);
                             tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
                             //console.log(tempEventObject);
                             
                         } else if (index > -1 && diff > 0 && diff < tempStartTime[0]) {
-                            //console.log(true);
+                            console.log(true);
                             tempStartTime.length = 0;
                             tempStartTime.push(diff);
                             //console.log(tempStartTime);
@@ -315,9 +322,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                             //console.log(tempEventObject);
                         }
                         //console.log(eventsObject);
-                    } else {
-                    //
-                    }
+                    } 
                }
                //console.log(tempEventObject);
                //to filter out loops with no events yet
@@ -1259,7 +1264,10 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
             },
             eventRender: function(event, element, view) {
                 element.qtip({
-                    content: event.title,
+                    content: {
+                        title: event.title,
+                        text: event.location
+                    },
                     show: {
                         solo: true,
                     },
@@ -1660,7 +1668,10 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             eventRender: function (event, element, view) {
                 //jquery qtip functionality to highlight event title
                 element.qtip({
-                    content: event.title,
+                    content: {
+                        title: event.title,
+                        text: event.location
+                    },
                     show: {
                         solo: true,
                     },
@@ -1756,50 +1767,6 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
 
     $scope.data = {};
     
-    $scope.signupEmail = function() {
-        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
-        
-        ref.createUser({
-            email: $scope.data.email,
-            password: $scope.data.password }, function(error, userData) {
-            if (error) {
-                console.log("Error creating user:", error);
-                var alertPopup = $ionicPopup.alert ({
-                    title: 'Unable to sign up',
-                    template: error,
-                    okType: 'button-dark'
-                });
-            } else {
-                //alert popup
-                var alertPopup = $ionicPopup.alert ({
-                    title: 'Thank you for signing up',
-                    template: 'Please proceed to login',
-                    okType: 'button-dark'
-                });
-                console.log("Successfully created user account with uid:", userData);
-                console.log(userData.uid); //success
-                //split id from email
-                var email = $scope.data.email;
-                var emailID = email.substring(0, email.lastIndexOf("@"));
-                //start user/ tree with uid as parent and name and email as child
-                var newUser = {};
-                newUser["/users/" + userData.uid] = {
-                    name: emailID, 
-                    email: $scope.data.email 
-                }
-                //perform a deep-path update
-                ref.update(newUser, function(error) {
-                    if (error) {
-                        console.log("Error registering new user:", error);
-                    }
-                })
-            }
-        });
-        //clear input fields
-        //this.data.email = null;
-        //this.data.password = null;
-    };
-    
     $scope.loginEmail = function() {
         var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
         
@@ -1810,7 +1777,8 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
                 console.log("Login Failed!", error);
                 var alertPopup = $ionicPopup.alert ({
                     title: 'Unable to log in',
-                    template: error
+                    template: error,
+                    okType: 'button-dark'
                 });
             } else {
                 console.log("Authenticated successfully with payload:", userData);
@@ -1902,6 +1870,56 @@ app.controller('changePasswordCtrl', function($scope, $ionicPopup) {
         this.existing.Password = null;
         this.new.Password = null;
     }
+})
+
+//signup controller
+app.controller('signUpCtrl', function($scope, $state, $ionicPopup) {
+    $scope.signUp = {};
+    
+    $scope.signupEmail = function() {
+        var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        
+        ref.createUser({
+            email: $scope.signUp.email,
+            password: $scope.signUp.password }, function(error, userData) {
+            if (error) {
+                console.log("Error creating user:", error);
+                var alertPopup = $ionicPopup.alert ({
+                    title: 'Unable to sign up',
+                    template: error,
+                    okType: 'button-dark'
+                });
+            } else {
+                //alert popup
+                var alertPopup = $ionicPopup.alert ({
+                    title: 'Thank you for signing up',
+                    template: 'Please proceed to login',
+                    okType: 'button-dark'
+                });
+                $state.go('signin');
+                console.log("Successfully created user account with uid:", userData);
+                console.log(userData.uid); //success
+                //split id from email
+                var email = $scope.signUp.email;
+                var emailID = email.substring(0, email.lastIndexOf("@"));
+                //start user/ tree with uid as parent and name and email as child
+                var newUser = {};
+                newUser["/users/" + userData.uid] = {
+                    name: emailID, 
+                    email: $scope.signUp.email 
+                }
+                //perform a deep-path update
+                ref.update(newUser, function(error) {
+                    if (error) {
+                        console.log("Error registering new user:", error);
+                    }
+                })
+            }
+        });
+        //clear input fields
+        //this.data.email = null;
+        //this.data.password = null;
+    };
 })
 
 //forgot password controller
