@@ -1184,6 +1184,13 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
             contentHeight: "350",
             editable: true,
             selectable: true,
+            select: function(start, end, jsEvent, view) {
+                var start = moment(start).format();
+                //console.log(start);
+                //ties to eventDate in addEvent modal for default value
+                $scope.eventDate = new Date(start);
+                //console.log($scope.eventDate);
+            },
             dayClick: function(date, jsEvent, view) {
                 this.addTouch();
                 //push Date into $scope.todaysDate to be passed into view

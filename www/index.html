@@ -164,22 +164,18 @@
             <ion-content>
              <form name="addEventForm" ng-submit="addEvent(eventName, eventDate, eventLocation)">
               <div class="list">
-                <label class="item item-input item-stacked-label">
-                  <span class="input-label">Event</span>
-                  <input type="text" placeholder="Dinner Gathering" id="eventName" ng-model="eventName" ng-required="true" ng-minlength="1">
+                <label class="item item-input">
+                  <!--<span class="input-label">Event</span>-->
+                  <input type="text" placeholder="Event" id="eventName" ng-model="eventName" ng-required="true" ng-minlength="1">
                 </label>
-                <label class="item item-input item-stacked-label">
-                  <span class="input-label">Date & Time</span>  
-                  <input type="datetime-local" placeholder= "yyyy-MM-ddTHH:mm:ss" id="eventDate" ng-model="eventDate" ng-required="true">
+                <label class="item item-input">
+                  <!--<span class="input-label">Date & Time</span>-->  
+                  <input type="datetime-local" placeholder="Date & Time" id="eventDate" ng-model="eventDate" ng-required="true">
                 </label>
-                <label class="item item-input item-stacked-label">
-                  <span class="input-label">Location</span>  
-                  <input type="text" placeholder="KLCC" id="eventLocation" ng-model="eventLocation" ng-required="true" ng-minlength="1">
+                <label class="item item-input">
+                  <!--<span class="input-label">Location</span>-->  
+                  <input type="text" placeholder="Location" id="eventLocation" ng-model="eventLocation" ng-required="true" ng-minlength="1">
                 </label>
-                <!--<label class="item item-input item-stacked-label">
-                  <span class="input-label">Loop </span>
-                  <input type="text" placeholder="Buddies">
-                </label> -->
             <div class="item item-button center">
                 <button class="button button-block button-outline button-dark" ng-disabled="addEventForm.$invalid">Add Event</button>
             </div>
@@ -199,9 +195,9 @@
             <ion-content>
                 <form name="addLoopForm" ng-submit="addLoop(newLoop)">
                 <div class="list">
-                  <label class="item item-input item-stacked-label">
-                    <span class="input label">Name</span>
-                      <input type="text" placeholder="Buddies" ng-model="newLoop" ng-minlength="1" ng-required="true">
+                  <label class="item item-input item-floating-label">
+                    <span class="input-label">Name</span>
+                      <input type="text" placeholder="Name" ng-model="newLoop" ng-minlength="1" ng-required="true">
                   </label>
                 </div>
                 <div class="item item-button center">
