@@ -1183,6 +1183,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
             //height: "auto",
             contentHeight: "350",
             editable: true,
+            selectable: true,
             dayClick: function(date, jsEvent, view) {
                 this.addTouch();
                 //push Date into $scope.todaysDate to be passed into view
@@ -1263,10 +1264,13 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 right: 'next'
             },
             eventRender: function(event, element, view) {
-                element.qtip({
+                /*element.qtip({
                     content: {
                         title: event.title,
                         text: event.location
+                    },
+                    style: {
+                        classes: 'qtip-light qtip-rounded',
                     },
                     show: {
                         solo: true,
@@ -1276,7 +1280,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                         viewport: true,
                     }
                 });
-                element.addTouch();
+                element.addTouch();*/
             },
         },
     },
@@ -1659,6 +1663,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             fixedWeekCount: false,
             editable: false,
             timezone: 'local',
+            selectable: true,
             firstDay: 1,
             header: {
                 left: 'prev',
@@ -1671,6 +1676,9 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                     content: {
                         title: event.title,
                         text: event.location
+                    },
+                    style: {
+                        classes: 'qtip-light qtip-rounded',
                     },
                     show: {
                         solo: true,
