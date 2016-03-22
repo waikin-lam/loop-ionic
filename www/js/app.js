@@ -1208,8 +1208,9 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                     var singleEvent = eventsSnapshots.val();
                     var key = eventsSnapshots.key();
                     //console.log(key); //unique ID of events
-                    var singleEventDate = singleEvent.start;
+                    var singleEventDate = moment(singleEvent.start).format();
                     //console.log(singleEventDate); //logs datetime in ISO format by order of eventkey i.e. whichever came first
+                    //console.log(singleEventDate);
                         
                     if (singleEventDate.includes(truncatedDate)) {
                         //retrieve event date, time, title and location and push to array $scope.eventsByDate

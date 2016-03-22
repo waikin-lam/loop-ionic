@@ -170,7 +170,7 @@
                   <input type="text" placeholder="Event" id="eventName" ng-model="eventName" ng-required="true" ng-minlength="1">
                 </label>
                 <label class="item item-input">
-                  <!--<span class="input-label">Date & Time</span>-->  
+                  <!--<span class="input-label">Date & Time</span>-->
                   <input type="datetime-local" placeholder="Date & Time" id="eventDate" ng-model="eventDate" ng-required="true">
                 </label>
                 <label class="item item-input">
@@ -325,7 +325,7 @@
                     <div class="item item-divider">
                         {{todaysDate.join(", ")}}
                     </div>
-                    <ion-item class="item" style="font-size: 1em" ng-repeat="event in eventsByDate">
+                    <ion-item class="item item-text-wrap" style="font-size: 1em" ng-repeat="event in eventsByDate">
                         <span>{{event.time}}</span>
                         <span>{{event.title}}</span>
                         <span>@ {{event.location}}</span>
