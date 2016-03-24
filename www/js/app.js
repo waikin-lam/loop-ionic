@@ -1589,101 +1589,11 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     var eventKeys = [];
     
     //filter list of loops to show only those users are authorized to see
-    /*var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
-    var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');*/
+    var userRef = new Firebase('https://vivid-heat-1234.firebaseio.com/users/' + uid + '/loops');
+    var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
     var allEventsRoot = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
     
-    var userLoopUID = [];
-    var loopsToDisplay = [];
-    var eventsObject = [];
-    
-    //refactor - an attempt to optimize performance
-    //get loopIDs from user node
-    function getLoopUIDfromUserPromise(uid) {
-        userLoopUID.length = 0
-        return ref.child('users').child(uid).child('loops').once('value').then(function(loopIDfrUser) {
-            var user = loopIDfrUser.val();
-            angular.forEach(user, function(key,value) {
-                userLoopUID.push(value);
-            })
-            return userLoopUID;
-        })
-    }
-    
-    var loopIDfromUsers = getLoopUIDfromUserPromise(uid);
-    
-    //once got loopIDs from user node, get data from loop node i.e. loop name for list of loops
-    var datafromLoops = loopIDfromUsers.then(function(loopIDfrUser) {
-        loopObject.length = 0;
-        loopsToDisplay.length = 0;
-        $scope.loops.length = 0;
-        //console.log(loopIDfrUser);
-        ref.child('loops').once('value').then(function(datafromLoops) {
-            var loopsTree = datafromLoops.val();
-            angular.forEach(loopsTree, function(key,value) {
-                loopObject.push({key: value, name:key.name})
-            })
-            console.log(loopObject);
-            angular.forEach(loopIDfrUser, function(key) {
-                for(var i=0; i<loopObject.length; i++) {
-                    if(key === loopObject[i].key) {
-                        $scope.loops.push(loopObject[i]);
-                    }
-                }
-            })
-            //return loopsToDisplay;
-            //console.log(loopsToDisplay); 
-        })   
-    })
-    
-    //with loopIDs from user node, get events from events node
-    var eventsNode = loopIDfromUsers.then(function(loopIDfrUser) {
-        for (var i=0; i<loopIDfrUser.length; i++) {
-            var key = loopIDfrUser[i];
-            //console.log(key);
-            ref.child('events').child(key).on('child_added', function (snapshot) {
-                var allEventData = snapshot.val();
-                $scope.allEvents.push({title: allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key})
-            })
-        }
-        /*angular.forEach(loopIDfrUser, function (key) {
-             ref.child('events').child(key).once('value').then(function(events) {
-                var events = events.val();
-                for (var eventID in events) {
-                    if (events.hasOwnProperty(eventID)) {
-                        $scope.allEvents.push(events[eventID]);
-                    }
-                }
-            })  
-        })*/
-    })
-    
-    /*Promise.all([loopIDfromUsers, loopsToDisplay]).then(function(results) {
-        console.log(results);
-        console.log(results[0]);
-        console.log(results[1]);
-        //console.log(results[2]);
-        $scope.loops = results[1];*/
-        /*angular.forEach(results[0], function (key) {
-            
-           var test =  ref.child('events').child(key).once('value').then(function(events){
-                var events = events.val();
-                for (var eventID in events) {
-                    if (events.hasOwnProperty(eventID)) {
-                        $scope.allEvents.push(events[eventID]);
-                    }
-                }
-               console.log($scope.allEvents);
-               //$scope.eventSources.push($scope.allEvents);
-               //$scope.eventSources = [$scope.allEvents];
-               //console.log($scope.eventSources);
-               //return $scope.eventSources
-            })
-           
-        })*/
-    //})
-    
-    /*userRef.on("value", function(userSnapshot) {
+    userRef.on("value", function(userSnapshot) {
         
         loopUIDfromUser.length = 0;
         var user = userSnapshot.val();
@@ -1720,6 +1630,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             })
             //console.log($scope.loops[0].key);
         })
+        
         allEventsRoot.on("value", function (allSnapshot) {
             $timeout(function() {
                 eventKeys.length = 0;
@@ -1731,9 +1642,10 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 //console.log($scope.loops);
                 $scope.allEvents.length = 0;
                 angular.forEach(eventKeys, function (key,value){
+                    //console.log(key);
                     for (var i=0; i<$scope.loops.length; i++) {
                         if (key === $scope.loops[i].key) {
-                            console.log(key);
+                            //console.log(key);
                             var eventData = allEventsRoot.child(key);
                             eventData.on("child_added", function(allEventsSnapshot) {
                                 var allEventData = allEventsSnapshot.val();
@@ -1746,7 +1658,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 console.log($scope.allEvents);
             })
         })
-    })*/
+    })
     
     $ionicPopover.fromTemplateUrl('my-popover.html', {
     scope: $scope
@@ -1793,7 +1705,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     };
     
     //initialize calendar view
-    $scope.eventSources = $scope.allEvents;
+    $scope.eventSources = [$scope.allEvents];
     
     //initialize filter: pushing loop key into array when unchecked and removing key from array when checked
     var loopsToHide = [];
