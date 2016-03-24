@@ -1604,8 +1604,8 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             var loopValue = loopSnapshot.val();
             //console.log(key);
             //console.log(value);
-            $scope.loops.push({key: loopUIDfromUser, name: loopValue.name});
-            //console.log($scope.loops);
+            $scope.loops.push({key: loopIDinUser, name: loopValue.name});
+            console.log($scope.loops);
         })
         
         allEventsRoot.child(loopIDinUser).on("child_added", function(eventSnapshot) {
@@ -1614,7 +1614,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             var eventValue = eventSnapshot.val();
             //console.log(eventKey);
             //console.log(eventValue);
-            $scope.allEvents.push({title: eventValue.title, start: eventValue.start, stick: eventValue.stick, location: eventValue.location, allDay: eventValue.allDay, color: eventValue.color, key: loopUIDfromUser});
+            $scope.allEvents.push({title: eventValue.title, start: eventValue.start, stick: eventValue.stick, location: eventValue.location, allDay: eventValue.allDay, color: eventValue.color, key: loopIDinUser});
             //console.log($scope.allEvents);
             })
         })
@@ -1706,7 +1706,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                         $scope.allEvents.push(loopsToShow[i]);
                     }
                 }
-                console.log($scope.allEvents);
+                //console.log($scope.allEvents);
                 })
             })
             
@@ -1714,10 +1714,11 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             
         } else {
             loopsToHide.push(key);
-            console.log(loopsToHide);
+            //console.log(loopsToHide);
             //take key from loopsToHide and iterate through $scope.allEvents to remove events that have keys equal to the key
             angular.forEach(loopsToHide, function (value, key) {
                 console.log(value);
+                //console.log($scope.allEvents);
                 for (var i=0; i<$scope.allEvents.length; i++) {
                     if (value === $scope.allEvents[i].key) {
                         var index1 = $scope.allEvents.indexOf($scope.allEvents[i]);
