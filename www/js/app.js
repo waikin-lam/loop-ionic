@@ -1593,72 +1593,32 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
     var allEventsRoot = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
     
-    userRef.on("value", function(userSnapshot) {
-        
-        loopUIDfromUser.length = 0;
-        var user = userSnapshot.val();
-        //console.log(user);
-        //console.log(Object.keys(user).length);
-        for (var loopUID in user) {
-            if (user.hasOwnProperty(loopUID)) {
-                var index = loopUIDfromUser.indexOf(loopUID);
-                if (index = -1) {
-                    loopUIDfromUser.push(loopUID);
-                }
-            }
-        }
+    userRef.on("child_added", function(userSnapshot) {
+        var loopIDinUser = userSnapshot.key();
+        //console.log(loopIDinUser);
+        loopUIDfromUser.push(loopIDinUser);
         //console.log(loopUIDfromUser);
-        loops.on("value", function(loopSnapshot) {
-            loopObject.length = 0;
-            var loop = loopSnapshot.val();
-            for (var loopUID in loop) {
-                if (loop.hasOwnProperty(loopUID)) {
-                    //console.log(loopUID);
-                    //console.log(loop[loopUID]);
-                    loopObject.push({key: loopUID, name: loop[loopUID].name})
-                    //console.log(loopObject);
-                }
-            }
-            //console.log(loopObject.length);
-            $scope.loops.length = 0;
-            angular.forEach(loopUIDfromUser, function (key) {
-                for (var i=0; i<loopObject.length; i++) {
-                    if (key === loopObject[i].key) {
-                        $scope.loops.push(loopObject[i]);
-                    }
-                }
-            })
-            //console.log($scope.loops[0].key);
+        
+        loops.child(loopIDinUser).on("value", function (loopSnapshot) {
+            var loopKey = loopSnapshot.key();
+            var loopValue = loopSnapshot.val();
+            //console.log(key);
+            //console.log(value);
+            $scope.loops.push({key: loopUIDfromUser, name: loopValue.name});
+            //console.log($scope.loops);
         })
         
-        allEventsRoot.on("value", function (allSnapshot) {
+        allEventsRoot.child(loopIDinUser).on("child_added", function(eventSnapshot) {
             $timeout(function() {
-                eventKeys.length = 0;
-                allSnapshot.forEach(function(childSnapshot) {
-                    var key = childSnapshot.key();
-                    eventKeys.push(key);
-                })
-                //console.log(eventKeys);
-                //console.log($scope.loops);
-                $scope.allEvents.length = 0;
-                angular.forEach(eventKeys, function (key,value){
-                    //console.log(key);
-                    for (var i=0; i<$scope.loops.length; i++) {
-                        if (key === $scope.loops[i].key) {
-                            //console.log(key);
-                            var eventData = allEventsRoot.child(key);
-                            eventData.on("child_added", function(allEventsSnapshot) {
-                                var allEventData = allEventsSnapshot.val();
-                                //console.log(allEventData);
-                                $scope.allEvents.push({title: allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key})
-                            })
-                        }  
-                    }
-                })
-                console.log($scope.allEvents);
+            var eventKey = eventSnapshot.key();
+            var eventValue = eventSnapshot.val();
+            //console.log(eventKey);
+            //console.log(eventValue);
+            $scope.allEvents.push({title: eventValue.title, start: eventValue.start, stick: eventValue.stick, location: eventValue.location, allDay: eventValue.allDay, color: eventValue.color, key: loopUIDfromUser});
+            //console.log($scope.allEvents);
             })
         })
-    })
+    })      
     
     $ionicPopover.fromTemplateUrl('my-popover.html', {
     scope: $scope
