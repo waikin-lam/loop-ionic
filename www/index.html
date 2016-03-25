@@ -158,32 +158,33 @@
       
       <!-- script for Add Event popover form input in Loop -->
       <script type="text/ng-template" id="loop-popover.html">
-        <ion-popover-view>
+        <ion-modal-view>
           <ion-header-bar>
               <h1 class="title">Add New Event</h1>
+              <button class="button button-icon ion-close-circled" ng-click="closeAddEventModal()"></button>
           </ion-header-bar>
             <ion-content>
              <form name="addEventForm" ng-submit="addEvent(eventName, eventDate, eventLocation)">
               <div class="list">
-                <label class="item item-input">
-                  <!--<span class="input-label">Event</span>-->
-                  <input type="text" placeholder="Event" id="eventName" ng-model="eventName" ng-required="true" ng-minlength="1">
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Title</span>
+                  <input type="text" id="eventName" ng-model="eventName" ng-required="true" ng-minlength="1">
                 </label>
-                <label class="item item-input">
-                  <!--<span class="input-label">Date & Time</span>-->
-                  <input type="datetime-local" placeholder="Date & Time" id="eventDate" ng-model="eventDate" ng-required="true">
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Date & Time</span>
+                  <input type="datetime-local" id="eventDate" ng-model="eventDate" ng-required="true">
                 </label>
-                <label class="item item-input">
-                  <!--<span class="input-label">Location</span>-->  
-                  <input type="text" placeholder="Location" id="eventLocation" ng-model="eventLocation" ng-required="true" ng-minlength="1">
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Location</span> 
+                  <input type="text" id="eventLocation" ng-model="eventLocation" ng-required="true" ng-minlength="1">
                 </label>
-            <div class="item item-button center">
-                <button class="button button-block button-outline button-dark" ng-disabled="addEventForm.$invalid">Add Event</button>
-            </div>
+                <div class="item item-button center">
+                  <button class="button button-block button-dark" ng-disabled="addEventForm.$invalid" ng-click="closeAddEventModal()">Add Event</button>
+                </div>
             </div>
            </form>
           </ion-content>
-        </ion-popover-view>
+        </ion-modal-view>
       </script>
       <!-- end of script for popover form -->
       
@@ -268,13 +269,62 @@
       </script>
       <!-- end of script for popover form -->
       
+      <!-- script to add personal Event popover input in myCalendar -->
+      <script type="text/ng-template" id="add-personal-event.html">
+        <ion-modal-view>
+          <ion-header-bar>
+              <h1 class="title">Add Personal Event</h1>
+              <button class="button button-icon ion-close-circled" ng-click="closeModal()"></button>
+          </ion-header-bar>
+            <ion-content>
+              <form name="addPersonalEventForm" ng-submit="addPersonalEvent(name, date, location)">
+                <div class="list">
+                  <label class="item item-input item-stacked-label">
+                    <span class="input-label">Title</span>
+                    <input type="text" id="eventName" ng-model="name" ng-required="true" ng-minlength="1">
+                  </label>
+                  <label class="item item-input item-stacked-label">
+                    <span class="input-label">Date & Time</span>
+                    <input type="datetime-local" id="eventDate" ng-model="date" ng-required="true">
+                  </label>
+                  <label class="item item-input item-stacked-label">
+                    <span class="input-label">Location</span>
+                    <input type="text" id="eventLocation" ng-model="location" ng-required="true" ng-minlength="1">
+                  </label>
+                  <div class="item item-button center">
+                    <button class="button button-block button-dark" ng-disabled="addPersonalEventForm.$invalid" ng-click="closeModal()">Add Event</button>  
+                  </div>
+                </div>
+              </form>
+            </ion-content> 
+        </ion-modal-view>
+      </script>
+      
       <script type="text/ng-template" id="mycalendar.html">
         <ion-view title="My Calendar">
             <ion-nav-buttons side="secondary">
-            <button class="button button-clear ion-navicon-round" ng-click="popover.show($event)"></button>
-                </ion-nav-buttons>
-          <ion-content>
+                <button class="button button-clear ion-navicon-round" ng-click="popover.show($event)"></button>
+                <span></span>
+                <span></span>
+                <span></span>
+                <button class="button button-clear ion-plus" ng-click="openModal($event,$index)"></button>
+            </ion-nav-buttons>
+          <ion-content has-bouncing="false" scrollbar-y="false">
               <div data-tap-disabled="true" ui-calendar="uiConfig.calendar" calendar="myCalendar" ng-model="eventSources"></div>
+              <!--Insert day view-->
+              <ion-list class="list">
+                <div class="item item-divider">{{todaysDate.join(", ")}}
+                </div>
+                <ion-item class="item item-text-wrap" style="font-size: 1em" ng-repeat="event in allEventsByDate">
+                    <div>
+                      <span>{{event.time}}</span>
+                      <span>{{event.title}}</span>
+                      <span>@ {{event.location}}</span>
+                      <ion-option-button class="button-dark">Edit</ion-option-button>
+                      <ion-option-button class="button-assertive">Delete</ion-option-button>
+                    </div>
+                </ion-item>
+              </ion-list>
           </ion-content>  
         </ion-view>
       </script>
@@ -316,7 +366,7 @@
                     <span></span>
                     <span></span>
                     <span></span>
-                    <button class="button button-clear ion-plus" ng-click="popover.show($event)"></button>
+                    <button class="button button-clear ion-plus" ng-click="openAddEventModal($event,$index)"></button>
                 </ion-nav-buttons>
             <ion-content has-bouncing="false" scrollbar-y="false">
                 <div data-tap-disabled="true" scroll="false" class="calendar" ui-calendar="uiConfig.calendar" ng-model="eventSources" calendar="myCalendar"></div>

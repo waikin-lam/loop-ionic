@@ -1294,13 +1294,6 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         },
     },
     
-    // from TemplateUrl() method
-    $ionicPopover.fromTemplateUrl('loop-popover.html', {
-        scope: $scope
-    }).then(function(popover) {
-        $scope.popover = popover;
-    });
-    
     $ionicPopover.fromTemplateUrl('users.html', {
         scope: $scope
     }).then(function(addUserPopup) {
@@ -1312,39 +1305,49 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
         $scope.popover.hide();
     };
     
-    //function to add event details to loop in Firebase
-    $scope.addEvent = function(eventName, eventDate, eventLocation) {
-        //extract color from /loops tree
-        var colorRef = new Firebase("https://vivid-heat-1234.firebaseio.com/loops/" + loopId);
-        var color = colorRef.on("value", function(data) {
-            var loopColor = data.val();
-            console.log(loopColor.color);
-        
-            var datetime = eventDate.toISOString();
-            //an atomic update to various locations upon introduction of a new event
-            $scope.events.$add({
-                title: eventName,
-                start: datetime,
-                stick: true,
-                location: eventLocation,
-                allDay: false,
-                color: loopColor.color
-            })
-            root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "added new event:" + " " + eventName);
-        })
-        
-        //re-up calendar with added event
-        $scope.eventSources = [$scope.events];
-        
-        //clear input fields
-        this.eventName = null;
-        this.eventDate = null;
-        this.eventLocation = null;
-        
-        //close popover
-        $scope.closePopover();
-    };
+    $ionicModal.fromTemplateUrl('loop-popover.html', {
+        scope: $scope,
+        animation: 'slide-in-up'
+    }).then(function(addEventModal) {
+        $scope.addEventModal = addEventModal;
+    });
+    $scope.openAddEventModal = function(event, $index) {
+        $scope.addEventModal.show();
     
+        //function to add event details to loop in Firebase
+        $scope.addEvent = function(eventName, eventDate, eventLocation) {
+            //extract color from /loops tree
+            var colorRef = new Firebase("https://vivid-heat-1234.firebaseio.com/loops/" + loopId);
+            var color = colorRef.on("value", function(data) {
+                var loopColor = data.val();
+                //console.log(loopColor.color);
+        
+                var datetime = eventDate.toISOString();
+                //an atomic update to various locations upon introduction of a new event
+                $scope.events.$add({
+                    title: eventName,
+                    start: datetime,
+                    stick: true,
+                    location: eventLocation,
+                    allDay: false,
+                    color: loopColor.color
+                })
+                root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " +  "added new event:" + " " + eventName);
+            })
+        
+            //re-up calendar with added event
+            $scope.eventSources = [$scope.events];
+        
+            //clear input fields
+            this.eventName = null;
+            this.eventDate = null;
+            this.eventLocation = null;
+        };
+    }
+    $scope.closeAddEventModal = function() {
+        $scope.addEventModal.hide();
+    };
+        
     //$ionicModal for event editing
     $ionicModal.fromTemplateUrl('edit-modal.html', {
         scope: $scope,
@@ -1570,7 +1573,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     console.log($scope.notifications);
 })
 
-app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray) {
+app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", "$ionicModal", "$firebaseArray",  function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray, $ionicModal, $firebaseArray) {
 
     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
     
@@ -1580,8 +1583,14 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     var uid = userData.uid;
     console.log(uid); //success!
     
+    //$scope to initialize personal events
+    var personal = ref.child('personalEvents').child(uid);
+    var sortPersonal = personal.orderByChild('start');
+    $scope.personalEvents = $firebaseArray(sortPersonal);
+    console.log($scope.personalEvents);
+    
     //initialize scope for consolidated Events
-    $scope.allEvents =[];
+    $scope.allEvents =$scope.personalEvents;
     
     $scope.loops = [];
     var loopUIDfromUser = [];
@@ -1608,42 +1617,113 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             console.log($scope.loops);
         })
         
-        allEventsRoot.child(loopIDinUser).on("child_added", function(eventSnapshot) {
+        allEventsRoot.child(loopIDinUser).on("child_added", function(eventSnapshot) {            
             $timeout(function() {
-            var eventKey = eventSnapshot.key();
-            var eventValue = eventSnapshot.val();
-            //console.log(eventKey);
-            //console.log(eventValue);
-            $scope.allEvents.push({title: eventValue.title, start: eventValue.start, stick: eventValue.stick, location: eventValue.location, allDay: eventValue.allDay, color: eventValue.color, key: loopIDinUser});
-            //console.log($scope.allEvents);
+              var eventKey = eventSnapshot.key();
+              var eventValue = eventSnapshot.val();
+              //console.log(eventKey);
+              //console.log(eventValue);
+              $scope.allEvents.push({title: eventValue.title, start: eventValue.start, stick: eventValue.stick, location: eventValue.location, allDay: eventValue.allDay, color: eventValue.color, key: loopIDinUser});
             })
         })
     })      
     
     $ionicPopover.fromTemplateUrl('my-popover.html', {
-    scope: $scope
+        scope: $scope
     }).then(function(popover) {
         $scope.popover = popover;
     });
     
+    //ionicModal for adding personal event
+    $ionicModal.fromTemplateUrl('add-personal-event.html', {
+        scope: $scope,
+        animation: 'slide-in-up'
+    }).then(function(modal) {
+        $scope.modal = modal;
+    });
+    $scope.openModal = function(event, $index) {
+        $scope.modal.show();
+        
+        //add personal event details
+        $scope.addPersonalEvent = function(name, date, location) {
+            console.log(name);
+            console.log(date);
+            console.log(location);
+            var datetime = date.toISOString();
+            console.log(datetime);
+            
+            $scope.personalEvents.$add({
+                title: name,
+                start: datetime,
+                stick: true,
+                location: location,
+                allDay: false,
+                backgroundColor: "#ffffff",
+                borderColor: "#000000",
+                textColor: "#000000",
+            })
+        }
+        this.name = null;
+        this.date = null;
+        this.location = null;
+    }
+    $scope.closeModal = function() {
+        $scope.modal.hide();
+    }
+    
+    //initialize array for dayClick
+    $scope.todaysDate = [];
+    $scope.allEventsByDate = [];
+    
     //config calendar
     $scope.uiConfig = {
         calendar: {
-            height: "auto",
-            //contentheight: "auto",
+            //height: "auto",
+            contentheight: "350",
             fixedWeekCount: false,
             editable: false,
             timezone: 'local',
             selectable: true,
+            select: function(start, end, jsEvent, view) {
+                var start = moment(start).format();
+                //ties to date in addPersonalEvent modal for default value
+                $scope.date = new Date(start);
+            },
             firstDay: 1,
             header: {
                 left: 'prev',
                 center: 'title',
                 right: 'next'
             },
+            dayClick: function(date, jsEvent, view) {
+                //pass clicked date into $scope.todaysDate to be passed to view as text in divider
+                this.addTouch();
+                var todaysDate = date.format('Do MMMM YYYY');
+                $scope.todaysDate.length = 0;
+                $scope.todaysDate.push(todaysDate);
+                
+                //push sorted Events into list
+                $scope.allEventsByDate.length = 0;
+                var selectedDate = date.format('YYYY-MM-DD');
+                
+                //console.log($scope.allEvents);
+                angular.forEach($scope.allEvents, function (key) {
+                    //console.log(key) //logs object
+                    var singleEventDate = moment(key.start).format();
+                    if(singleEventDate.includes(selectedDate)) {
+                        var singleEventTime = moment(singleEventDate).format('hh:mm a');
+                        $scope.allEventsByDate.push({title: key.title, location: key.location, time: singleEventTime, start: key.start});
+                        //console.log($scope.allEventsByDate);
+                        $scope.allEventsByDate.sort(function(a,b){
+                            return new Date(a.start).getTime() - new Date(b.start).getTime();
+                        })
+                    }
+                    
+                })
+            },
             eventRender: function (event, element, view) {
                 //jquery qtip functionality to highlight event title
-                element.qtip({
+                /*element.qtip({
                     content: {
                         title: event.title,
                         text: event.location
@@ -1659,7 +1739,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                         viewport: true,
                     }
                 });
-                element.addTouch();
+                element.addTouch();*/
             },
          },
     };
@@ -1714,11 +1794,11 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             
         } else {
             loopsToHide.push(key);
-            //console.log(loopsToHide);
+            console.log(loopsToHide);
             //take key from loopsToHide and iterate through $scope.allEvents to remove events that have keys equal to the key
             angular.forEach(loopsToHide, function (value, key) {
                 console.log(value);
-                //console.log($scope.allEvents);
+                console.log($scope.allEvents);
                 for (var i=0; i<$scope.allEvents.length; i++) {
                     if (value === $scope.allEvents[i].key) {
                         var index1 = $scope.allEvents.indexOf($scope.allEvents[i]);
