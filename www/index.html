@@ -257,7 +257,7 @@
                 <!--<ion-checkbox ng-repeat="(key, loop) in loops" name="filter" data-type={{key}}>
                 {{loop.name}}
                 </ion-checkbox>-->
-                <ion-checkbox class="checkbox-dark" ng-repeat="loop in loops" name="uncheckedLoops[]" value="{{loop.key}}" ng-click="uncheck(loop.key)">{{loop.name}}
+                <ion-checkbox class="checkbox-dark" ng-repeat="loop in filterLoops" name="uncheckedLoops[]" value="{{loop.key}}" ng-click="uncheck(loop.key)">{{loop.name}}
                 </ion-checkbox>
                 <!--<div class="item item-button center">
                     <button class="button button-block button-outline button-positive" type="submit" ng-click="isChecked()">
@@ -274,7 +274,7 @@
         <ion-modal-view>
           <ion-header-bar>
               <h1 class="title">Add Personal Event</h1>
-              <button class="button button-icon ion-close-circled" ng-click="closeModal()"></button>
+              <button class="button button-icon ion-close-circled" ng-click="closeAddEventModal()"></button>
           </ion-header-bar>
             <ion-content>
               <form name="addPersonalEventForm" ng-submit="addPersonalEvent(name, date, location)">
@@ -292,11 +292,41 @@
                     <input type="text" id="eventLocation" ng-model="location" ng-required="true" ng-minlength="1">
                   </label>
                   <div class="item item-button center">
-                    <button class="button button-block button-dark" ng-disabled="addPersonalEventForm.$invalid" ng-click="closeModal()">Add Event</button>  
+                    <button class="button button-block button-dark" ng-disabled="addPersonalEventForm.$invalid" ng-click="closeAddEventModal()">Add Event</button>  
                   </div>
                 </div>
               </form>
             </ion-content> 
+        </ion-modal-view>
+      </script>
+      
+      <!-- script to edit event in MyCalendar view -->
+      <script type="text/ng-template" id="editEventMyCalendar.html">
+        <ion-modal-view>
+            <ion-header-bar>
+              <h1 class="title">Edit Event</h1>
+              <button class="button button-icon ion-close-circled" ng-click="closeModal()"></button>
+            </ion-header-bar>
+            <ion-content>
+            <!--contents of modal -->
+            <form ng-submit="editEvent(eventTitle, datetime, location)">
+              <div class="list">
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Title</span>
+                  <input type="text" ng-model="eventTitle">
+                </label>
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Date & Time</span>
+                  <input type="datetime-local" ng-model="datetime">
+                </label>
+                <label class="item item-input item-stacked-label">
+                  <span class="input-label">Location</span>
+                  <input type="text" ng-model="location">
+                </label>
+                <button class="button button-block button-dark" ng-click="closeModal()">Update</button>
+              </div>
+            </form>
+            </ion-content>
         </ion-modal-view>
       </script>
       
@@ -307,7 +337,7 @@
                 <span></span>
                 <span></span>
                 <span></span>
-                <button class="button button-clear ion-plus" ng-click="openModal($event,$index)"></button>
+                <button class="button button-clear ion-plus" ng-click="openAddEventModal($event,$index)"></button>
             </ion-nav-buttons>
           <ion-content has-bouncing="false" scrollbar-y="false">
               <div data-tap-disabled="true" ui-calendar="uiConfig.calendar" calendar="myCalendar" ng-model="eventSources"></div>
@@ -320,8 +350,8 @@
                       <span>{{event.time}}</span>
                       <span>{{event.title}}</span>
                       <span>@ {{event.location}}</span>
-                      <ion-option-button class="button-dark">Edit</ion-option-button>
-                      <ion-option-button class="button-assertive">Delete</ion-option-button>
+                      <ion-option-button class="button-dark" ng-click="editEventModal(event, $index)">Edit</ion-option-button>
+                      <ion-option-button class="button-assertive" ng-click="showConfirm(event, $index)">Delete</ion-option-button>
                     </div>
                 </ion-item>
               </ion-list>
@@ -506,7 +536,7 @@
                 <form ng-submit="updateEvent(updateTitle, updateDateTime, updateLocation)">
                 <div class="list">
                     <label class="item item-input item-stacked-label">
-                        <span class="input-label">Name</span>
+                        <span class="input-label">Title</span>
                         <input type="text" ng-model="updateTitle">
                     </label>
                     <label class="item item-input item-stacked-label">

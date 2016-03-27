@@ -536,6 +536,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                                     //console.log(false);
                                     keyArray.push(key);
                                     //console.log(keyArray);
+                                    tempEventObject.length = 0;
                                     tempStartTime.push(diff);
                                     //console.log(tempStartTime);
                                     tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
@@ -757,10 +758,10 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             var eventsTree = loopIDfromUsers.then(function(loopIDfrUser){
                 var loops = [];
                 eventsObject.length = 0;
-                //console.log(loopIDfrUser);
+                console.log(loopIDfrUser);
                 for (var i=0; i<loopIDfrUser.length; i++) {
                     var key = loopIDfrUser[i];
-                    //console.log(key)
+                    console.log(key)
                 }
                 angular.forEach(loopIDfrUser, function (key) {
                     var keyArray = [];
@@ -768,9 +769,9 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                     var tempEventObject = [];
     
                     return ref.child('events').child(key).once('value').then(function(events) {
-                        //console.log(key);
+                        console.log(key);
                         var events = events.val();
-                        //console.log(events);
+                        console.log(events);
                
                         for (var eventID in events) {
                             if (events.hasOwnProperty(eventID)) {
@@ -788,20 +789,21 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                         
                                 // check if loop has already an existing event with a dummy [keyArray] array
                                 var index = keyArray.indexOf(key);
-                                //console.log(index);
+                                console.log(index);
                         
                                 // if loop has not been evaluated before and the event is one in the future
                                 if (index === -1 && diff > 0) {
-                                    //console.log(false);
+                                    console.log(false);
                                     keyArray.push(key);
-                                    //console.log(keyArray);
+                                    console.log(keyArray);
+                                    tempEventObject.length = 0;
                                     tempStartTime.push(diff);
                                     //console.log(tempStartTime);
                                     tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
-                                    //console.log(tempEventObject);
+                                    console.log(tempEventObject);
                             
                                 } else if (index > -1 && diff > 0 && diff < tempStartTime[0]) {
-                                    //console.log(true);
+                                    console.log(true);
                                     tempStartTime.length = 0;
                                     tempStartTime.push(diff);
                                     //console.log(tempStartTime);
@@ -811,17 +813,17 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                                 } else if (index === -1 && diff < 0) {
                                     tempEventObject.length = 0;
                                     tempEventObject.push({key: key, title: "null"});
-                                    //console.log(tempEventObject);
+                                    console.log(tempEventObject);
                                 }
                                 //console.log(eventsObject);
                             } 
                         }
-                        //console.log(tempEventObject);
+                        console.log(tempEventObject);
                         //to filter out loops with no events yet
                         if (tempEventObject.length === 1) {
                             eventsObject.push(tempEventObject[0]);
                         }
-                        //console.log(eventsObject);
+                        console.log(eventsObject);
                     })
                 return eventsObject;
                 })  
@@ -983,7 +985,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             //console.log(loopIDfrUser);
             for (var i=0; i<loopIDfrUser.length; i++) {
                 var key = loopIDfrUser[i];
-                //console.log(key)
+                console.log(key)
             }
             angular.forEach(loopIDfrUser, function (key) {
                 var keyArray = [];
@@ -991,9 +993,9 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                 var tempEventObject = [];
             
                 return ref.child('events').child(key).once('value').then(function(events) {
-                    //console.log(key);
+                    console.log(key);
                     var events = events.val();
-                    //console.log(events);
+                    console.log(events);
                
                     for (var eventID in events) {
                         if (events.hasOwnProperty(eventID)) {
@@ -1007,17 +1009,18 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                         
                             // compare event start time to current start time, both in ms, with - implying event is in the past, and + implying upcoming event(s)
                             var diff = dateInMS - currentDateInMS;
-                            //console.log(diff);
+                            console.log(diff);
                         
                             // check if loop has already an existing event with a dummy [keyArray] array
                             var index = keyArray.indexOf(key);
-                            //console.log(index);
+                            console.log(index);
                         
                             // if loop has not been evaluated before and the event is one in the future
                             if (index === -1 && diff > 0) {
                                 //console.log(false);
                                 keyArray.push(key);
                                 //console.log(keyArray);
+                                tempEventObject.length = 0;
                                 tempStartTime.push(diff);
                                 //console.log(tempStartTime);
                                 tempEventObject.push({key:key, start:events[eventID].start, title:events[eventID].title});
@@ -1041,12 +1044,12 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
                         //
                         }
                     }
-                //console.log(tempEventObject);
+                console.log(tempEventObject);
                 //to filter out loops with no events yet
                 if (tempEventObject.length === 1) {
                     eventsObject.push(tempEventObject[0]);
                     }
-                //console.log(eventsObject);
+                console.log(eventsObject);
                 })
             return eventsObject;
             })  
@@ -1072,15 +1075,15 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
             
                 return ref.child('events').child(loopID).once('value').then(function(events){
                     var events = events.val();
-                    console.log(events);
+                    //console.log(events);
                 
                     // if {events} is empty
                     if(isEmpty(events)) {
-                        console.log(object);
+                        //console.log(object);
                         loopWithoutEvent.push({key: object.key, name: object.name, title: 'null'});
                         //console.log("events is empty");
                     }
-                    console.log(loopWithoutEvent);
+                    //console.log(loopWithoutEvent);
                 })
                 return loopWithoutEvent;
             })
@@ -1428,10 +1431,14 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
             console.log(update.start);
             console.log(update.location);
             $scope.events.$save(update).then(function(sortEvents) {
-                //alert("data has been updated");
-                $scope.eventsByDate.length = 0;
-                $scope.eventsByDate.push({title: update.title, location: update.location, start: datetime});
-                
+                 console.log($scope.eventsByDate[$index]);
+                var time = moment(update.start).format('hh:mm a');
+                //console.log(time);
+                $scope.eventsByDate[$index].title = update.title;
+                $scope.eventsByDate[$index].time = time;
+                $scope.eventsByDate[$index].start = update.start;
+                $scope.eventsByDate[$index].location = update.location;
+          
                 //notification of event edit
                 root.child("changes").child(loopId).child(currentDateInMS).set(userName + " " + "edited event: " + event.title);
                 
@@ -1573,7 +1580,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     console.log($scope.notifications);
 })
 
-app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", "$ionicModal", "$firebaseArray",  function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray, $ionicModal, $firebaseArray) {
+app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", "$ionicModal", "$firebaseArray", "$ionicPopup", "$ionicListDelegate", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray, $ionicModal, $firebaseArray, $ionicPopup, $ionicListDelegate) {
 
     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
     
@@ -1583,6 +1590,20 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     var uid = userData.uid;
     console.log(uid); //success!
     
+    //get current time
+    var currentDate = new Date();
+    var currentDateInMS = currentDate.getTime();
+    console.log(currentDateInMS);
+    
+    //retrieve user name
+    var userName = [];
+    ref.child('/users').child(uid).once('value', function (snapshot) {
+        userName.length = 0;
+        var userVal = snapshot.val();
+        userName.push(userVal.name);
+        console.log(userName);
+    })
+    
     //$scope to initialize personal events
     var personal = ref.child('personalEvents').child(uid);
     var sortPersonal = personal.orderByChild('start');
@@ -1590,9 +1611,9 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     console.log($scope.personalEvents);
     
     //initialize scope for consolidated Events
-    $scope.allEvents =$scope.personalEvents;
+    $scope.allEvents = $scope.personalEvents;
     
-    $scope.loops = [];
+    $scope.filterLoops = [];
     var loopUIDfromUser = [];
     var loopObject = [];
     var eventKeys = [];
@@ -1602,19 +1623,22 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     var loops = new Firebase('https://vivid-heat-1234.firebaseio.com/loops/');
     var allEventsRoot = new Firebase('https://vivid-heat-1234.firebaseio.com/events');
     
-    userRef.on("child_added", function(userSnapshot) {
+    /*userRef.on("child_added", function(userSnapshot) {
         var loopIDinUser = userSnapshot.key();
-        //console.log(loopIDinUser);
+        console.log(loopIDinUser);
         loopUIDfromUser.push(loopIDinUser);
         //console.log(loopUIDfromUser);
         
         loops.child(loopIDinUser).on("value", function (loopSnapshot) {
             var loopKey = loopSnapshot.key();
             var loopValue = loopSnapshot.val();
-            //console.log(key);
-            //console.log(value);
-            $scope.loops.push({key: loopIDinUser, name: loopValue.name});
-            console.log($scope.loops);
+            console.log(loopKey);
+            console.log(loopValue);
+            //to avoid error in callback when adding/deleting loop in Loops tab
+            if(loopValue != null) {
+                $scope.filterLoops.push({key: loopIDinUser, name: loopValue.name});
+            }
+            console.log($scope.filterLoops);
         })
         
         allEventsRoot.child(loopIDinUser).on("child_added", function(eventSnapshot) {            
@@ -1623,10 +1647,77 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
               var eventValue = eventSnapshot.val();
               //console.log(eventKey);
               //console.log(eventValue);
-              $scope.allEvents.push({title: eventValue.title, start: eventValue.start, stick: eventValue.stick, location: eventValue.location, allDay: eventValue.allDay, color: eventValue.color, key: loopIDinUser});
+              $scope.allEvents.push({title: eventValue.title, start: eventValue.start, stick: eventValue.stick, location: eventValue.location, allDay: eventValue.allDay, color: eventValue.color, key: loopIDinUser, eventKey: eventKey});
             })
         })
-    })      
+    })*/
+    
+    userRef.on("value", function(userSnapshot) {
+        
+        loopUIDfromUser.length = 0;
+        var user = userSnapshot.val();
+        //console.log(user);
+        //console.log(Object.keys(user).length);
+        for (var loopUID in user) {
+            if (user.hasOwnProperty(loopUID)) {
+                var index = loopUIDfromUser.indexOf(loopUID);
+                if (index = -1) {
+                    loopUIDfromUser.push(loopUID);
+                }
+            }
+        }
+        //console.log(loopUIDfromUser);
+        loops.on("value", function(loopSnapshot) {
+            loopObject.length = 0;
+            var loop = loopSnapshot.val();
+            for (var loopUID in loop) {
+                if (loop.hasOwnProperty(loopUID)) {
+                    //console.log(loopUID);
+                    //console.log(loop[loopUID]);
+                    loopObject.push({key: loopUID, name: loop[loopUID].name})
+                    //console.log(loopObject);
+                }
+            }
+            //console.log(loopObject.length);
+            $scope.filterLoops.length = 0;
+            angular.forEach(loopUIDfromUser, function (key) {
+                for (var i=0; i<loopObject.length; i++) {
+                    if (key === loopObject[i].key) {
+                        $scope.filterLoops.push(loopObject[i]);
+                    }
+                }
+            })
+            //console.log($scope.filterLoops[0].key);
+        })
+        allEventsRoot.on("value", function (allSnapshot) {
+            $timeout(function() {
+                eventKeys.length = 0;
+                allSnapshot.forEach(function(childSnapshot) {
+                    var key = childSnapshot.key();
+                    eventKeys.push(key);
+                })
+                //console.log(eventKeys);
+                //console.log($scope.loops);
+                //$scope.allEvents.length = 0;
+                angular.forEach(eventKeys, function (key,value){
+                    for (var i=0; i<$scope.filterLoops.length; i++) {
+                        if (key === $scope.filterLoops[i].key) {
+                            //console.log(key);
+                            var eventData = allEventsRoot.child(key);
+                            eventData.on("child_added", function(allEventsSnapshot) {
+                                var allEventKey = allEventsSnapshot.key();
+                                var allEventData = allEventsSnapshot.val();
+                                //console.log(allEventKey);
+                                //console.log(allEventData);
+                                $scope.allEvents.push({title: allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key, eventKey: allEventKey})
+                            })
+                        }  
+                    }
+                })
+                //console.log($scope.allEvents);
+            })
+        })
+    })
     
     $ionicPopover.fromTemplateUrl('my-popover.html', {
         scope: $scope
@@ -1638,11 +1729,11 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     $ionicModal.fromTemplateUrl('add-personal-event.html', {
         scope: $scope,
         animation: 'slide-in-up'
-    }).then(function(modal) {
-        $scope.modal = modal;
+    }).then(function(addEventModal) {
+        $scope.addEventModal = addEventModal;
     });
-    $scope.openModal = function(event, $index) {
-        $scope.modal.show();
+    $scope.openAddEventModal = function(event, $index) {
+        $scope.addEventModal.show();
         
         //add personal event details
         $scope.addPersonalEvent = function(name, date, location) {
@@ -1662,13 +1753,197 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 borderColor: "#000000",
                 textColor: "#000000",
             })
+            console.log($scope.allEventsByDate);
+            //push event into $scope.allEventsByDate and sort
+            var singleEventTime = moment(date).format('hh:mm a');
+            console.log(singleEventTime);
+            $scope.allEventsByDate.push({title: name, location: location, time: singleEventTime, start: datetime});
+            console.log($scope.allEventsByDate);
+            
+            $scope.allEventsByDate.sort(function(a,b) {
+                return new Date(a.start).getTime() - new Date(b.start).getTime();
+            })
         }
         this.name = null;
         this.date = null;
         this.location = null;
     }
+    $scope.closeAddEventModal = function() {
+        $scope.addEventModal.hide();
+        $ionicListDelegate.closeOptionButtons();
+    }
+    
+    //ionicModal for event editing
+    $ionicModal.fromTemplateUrl('editEventMyCalendar.html', {
+        scope: $scope,
+        animation: 'slide-in-up'
+    }).then(function(modal) {
+        $scope.modal = modal;
+    });
+    $scope.editEventModal = function(event, $index) {
+        $scope.modal.show();
+        console.log(event); //eventKey, loopID
+        //console.log($index);
+        
+        $scope.editEvent = function (eventTitle, datetime, location) {
+            if(event.loopID == null) { //for personal events
+                console.log("personal");
+                var update = $scope.personalEvents.$getRecord(event.eventKey);
+                console.log(update);
+                
+                if (eventTitle == null && datetime == null && location == null) {
+                    //combination 1 - no input at all
+                    console.log(1);
+                    update.title = event.title;
+                    update.start = event.start;
+                    update.location = event.location;
+                } else if (eventTitle != null && datetime != null && location != null) {
+                    //combination 2 - all input
+                    console.log(2);
+                    var datetime = datetime.toISOString();
+                    update.title = eventTitle;
+                    update.start = datetime;
+                    update.location = location;
+                } else if (eventTitle != null && datetime != null && location == null) {
+                    //combination 3 - title and datetime input
+                    console.log(3);
+                    var datetime = datetime.toISOString();
+                    update.title = eventTitle;
+                    update.start = datetime;
+                    update.location = event.location;
+                } else if (eventTitle != null && datetime == null && location != null) {
+                    //combination 4 - title and location input
+                    console.log(4);
+                    update.title = eventTitle;
+                    update.start = event.start;
+                    update.location = location;
+                } else if (eventTitle == null && datetime != null && location != null) {
+                    //combination 5 - datetime and location input
+                    console.log(5);
+                    var datetime = datetime.toISOString();
+                    update.title = event.title;
+                    update.start = datetime;
+                    update.location = location;
+                } else if (eventTitle != null && datetime == null && location == null) {
+                    //combination 6 - title input only
+                    console.log(6);
+                    update.title = eventTitle;
+                    update.start = event.start;
+                    update.location = event.location;
+                } else if (eventTitle == null && datetime != null && location == null) {
+                    //combination 7 - datetime input only
+                    console.log(7);
+                    var datetime = datetime.toISOString();
+                    update.title = event.title;
+                    update.start = datetime;
+                    update.location = event.location;
+                } else if (eventTitle == null && datetime == null && location != null) {
+                    //combination 8 - location input only
+                    console.log(8);
+                    update.title = event.title;
+                    update.start = event.start;
+                    update.location = location;
+                }
+                console.log(update.title);
+                console.log(update.start);
+                console.log(update.location);
+                
+                //save changes to Firebase & reflect in $scope.allEvents
+                $scope.personalEvents.$save(update).then(function(){
+                    //update $scope.allEventsByDate
+                    console.log($scope.allEventsByDate[$index]);
+                    var time = moment(update.start).format('hh:mm a');
+                    $scope.allEventsByDate[$index].title = update.title;
+                    $scope.allEventsByDate[$index].time = time;
+                    $scope.allEventsByDate[$index].start = update.start;
+                    $scope.allEventsByDate[$index].location = update.location;
+                })
+                
+            } else if (event.loopID != null){ //loop events
+                console.log("loop"); 
+                var update = [];
+                
+                if (eventTitle == null && datetime == null && location == null) {
+                    //combination 1 - no input at all
+                    console.log(1);
+                    update.title = event.title;
+                    update.start = event.start;
+                    update.location = event.location;
+                } else if (eventTitle != null && datetime != null && location != null) {
+                    //combination 2 - all input
+                    console.log(2);
+                    var datetime = datetime.toISOString();
+                    update.title = eventTitle;
+                    update.start = datetime;
+                    update.location = location;
+                } else if (eventTitle != null && datetime != null && location == null) {
+                    //combination 3 - title and datetime input
+                    console.log(3);
+                    var datetime = datetime.toISOString();
+                    update.title = eventTitle;
+                    update.start = datetime;
+                    update.location = event.location;
+                } else if (eventTitle != null && datetime == null && location != null) {
+                    //combination 4 - title and location input
+                    console.log(4);
+                    update.title = eventTitle;
+                    update.start = event.start;
+                    update.location = location;
+                } else if (eventTitle == null && datetime != null && location != null) {
+                    //combination 5 - datetime and location input
+                    console.log(5);
+                    var datetime = datetime.toISOString();
+                    update.title = event.title;
+                    update.start = datetime;
+                    update.location = location;
+                } else if (eventTitle != null && datetime == null && location == null) {
+                    //combination 6 - title input only
+                    console.log(6);
+                    update.title = eventTitle;
+                    update.start = event.start;
+                    update.location = event.location;
+                } else if (eventTitle == null && datetime != null && location == null) {
+                    //combination 7 - datetime input only
+                    console.log(7);
+                    var datetime = datetime.toISOString();
+                    update.title = event.title;
+                    update.start = datetime;
+                    update.location = event.location;
+                } else if (eventTitle == null && datetime == null && location != null) {
+                    //combination 8 - location input only
+                    console.log(8);
+                    update.title = event.title;
+                    update.start = event.start;
+                    update.location = location;
+                }
+                console.log(update.title);
+                console.log(update.start);
+                console.log(update.location);
+                
+                //update $scope.allEventsByDate
+                console.log($scope.allEventsByDate[$index]);
+                var time = moment(update.start).format('hh:mm a');
+                $scope.allEventsByDate[$index].title = update.title;
+                $scope.allEventsByDate[$index].time = time;
+                $scope.allEventsByDate[$index].start = update.start;
+                $scope.allEventsByDate[$index].location = update.location;
+                
+                //update event detail in Events node & reflect in $scope.allEvents
+                allEventsRoot.child(event.loopID).child(event.eventKey).update({
+                    title: update.title,
+                    start: update.start,
+                    location: update.location
+                })
+                $scope.allEvents.length = 0;
+                //$scope.allEvents.splice(0, $scope.allEvents.length);
+                console.log($scope.allEvents);
+            }
+            //console.log($scope.allEvents);
+        }
+    }
     $scope.closeModal = function() {
         $scope.modal.hide();
+        $ionicListDelegate.closeOptionButtons();
     }
     
     //initialize array for dayClick
@@ -1705,20 +1980,29 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 //push sorted Events into list
                 $scope.allEventsByDate.length = 0;
                 var selectedDate = date.format('YYYY-MM-DD');
+                console.log(selectedDate);
                 
                 //console.log($scope.allEvents);
+                
                 angular.forEach($scope.allEvents, function (key) {
-                    //console.log(key) //logs object
-                    var singleEventDate = moment(key.start).format();
-                    if(singleEventDate.includes(selectedDate)) {
-                        var singleEventTime = moment(singleEventDate).format('hh:mm a');
-                        $scope.allEventsByDate.push({title: key.title, location: key.location, time: singleEventTime, start: key.start});
-                        //console.log($scope.allEventsByDate);
-                        $scope.allEventsByDate.sort(function(a,b){
-                            return new Date(a.start).getTime() - new Date(b.start).getTime();
-                        })
+                    console.log(key);
+                    if (key.eventKey == null) {
+                        var singleEventDate = moment(key.start).format();
+                        if(singleEventDate.includes(selectedDate)) {
+                            var singleEventTime = moment(singleEventDate).format('hh:mm a');
+                            $scope.allEventsByDate.push({title: key.title, location: key.location, time: singleEventTime, start: key.start, eventKey: key.$id});
+                        }
+                    } else {
+                        var singleEventDate = moment(key.start).format();
+                        if(singleEventDate.includes(selectedDate)) {
+                            var singleEventTime = moment(singleEventDate).format('hh:mm a');
+                            $scope.allEventsByDate.push({title: key.title, location: key.location, time: singleEventTime, start: key.start, loopID: key.key, eventKey: key.eventKey});
+                        }
                     }
-                    
+                    console.log($scope.allEventsByDate);
+                    $scope.allEventsByDate.sort(function(a,b) {
+                        return new Date(a.start).getTime() - new Date(b.start).getTime();
+                    })
                 })
             },
             eventRender: function (event, element, view) {
@@ -1754,11 +2038,13 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     var loopsToShow = [];
     
     $scope.uncheck = function uncheck(key) {
+        //console.log(key);
         var index = loopsToHide.indexOf(key);
         if (index >= 0) { //key present in $scope.loopsToHide hence to re-introduce events into $scope.allEvents
             reloadEvents.length = 0;
-            loopsToShow.length = 0;            loopsToHide.splice(index, 1);
-            console.log(loopsToHide);
+            loopsToShow.length = 0;            
+            loopsToHide.splice(index, 1);
+            //console.log(loopsToHide);
             //recall $scope.allEvents from Firebase
             allEventsRoot.on("value", function (allSnapshot){
             $timeout(function(){
@@ -1771,15 +2057,15 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                         reloadEvents.push({title:allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key})
                         })
                     })
-                console.log(reloadEvents);
+                //console.log(reloadEvents);
                 //isolate relevant events in [reloadEvents] with key
-                console.log(key);
+                //console.log(key);
                 for (var i=0; i < reloadEvents.length; i++) {
                     if(key === reloadEvents[i].key) {
                         loopsToShow.push(reloadEvents[i]);
                         }
                     }
-                console.log(loopsToShow);
+                //console.log(loopsToShow);
                 for (var i=0; i < loopsToShow.length; i++) {
                     var index = $scope.allEvents.indexOf(loopsToShow[i]);
                     if (index = -1) {
@@ -1794,32 +2080,70 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             
         } else {
             loopsToHide.push(key);
-            console.log(loopsToHide);
+            //console.log(loopsToHide);
             //take key from loopsToHide and iterate through $scope.allEvents to remove events that have keys equal to the key
             angular.forEach(loopsToHide, function (value, key) {
-                console.log(value);
+                //console.log(value); //logs loop key
+                //console.log(key);
                 console.log($scope.allEvents);
                 for (var i=0; i<$scope.allEvents.length; i++) {
                     if (value === $scope.allEvents[i].key) {
                         var index1 = $scope.allEvents.indexOf($scope.allEvents[i]);
-                        console.log(index1);
+                        //console.log(index1);
                         if (loopsToHideIndex.indexOf(index1) >= 0) {
                             //Do nothing as [loopsToHideIndex] already contains index1
                         } else { //otherwise, push index1 into [loopsToHideIndex]
                             loopsToHideIndex.push(index1);
-                            console.log(loopsToHideIndex);
+                            //console.log(loopsToHideIndex);
                         }
                     }
                 }
             })
             //use [loopsToHideIndex] to alter $scope.allEvents
             loopsToHideIndex.sort(function(a,b){return a-b; }); //arrange index by descending order
-            console.log(loopsToHideIndex);
+            //console.log(loopsToHideIndex);
             for (var i = loopsToHideIndex.length-1; i>=0; i--) {
                 $scope.allEvents.splice(loopsToHideIndex[i], 1);
             }
             loopsToHideIndex.length = 0;
         }
+    }
+    
+    //showConfirm function for popup to delete event in mycalendar
+    $scope.showConfirm = function(event, $index) {
+        var confirmPopup = $ionicPopup.confirm({
+            title: 'Delete Event',
+            template: 'Are you sure you want to delete this event?',
+            cancelText: 'No',
+            cancelType: 'button-default',
+            okText: 'Yes',
+            okType: 'button-dark'
+        });
+        confirmPopup.then(function(res) {
+            if(res) {
+                console.log(event);
+                console.log($index);
+                if (event.loopID == null) {
+                    var remPersonal = new Firebase('https://vivid-heat-1234.firebaseio.com/personalEvents/' + uid + '/' + event.eventKey);
+                    remPersonal.remove();
+                    
+                    $scope.allEventsByDate.splice($index, 1);
+                } else {
+                    var remLoop = new Firebase('https://vivid-heat-1234.firebaseio.com/events/' + event.loopID + '/' + event.eventKey);
+                    remLoop.remove();
+                    $scope.allEventsByDate.splice($index,1);
+                    console.log($scope.allEvents);
+                    for (var i=0; i<$scope.allEvents.length; i++) {
+                        if(event.eventKey === $scope.allEvents[i].eventKey) {
+                            $scope.allEvents.splice(i,1);
+                        }
+                    }
+                    ref.child('changes').child(event.loopID).child(currentDateInMS).set(userName + " " + "deleted event:" + " " + event.title);
+                }
+            } else {
+                $ionicListDelegate.closeOptionButtons();
+            }
+        })
     }
 }])
 
