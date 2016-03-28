@@ -1581,7 +1581,16 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
     console.log($scope.notifications);
 })
 
-app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", "$ionicModal", "$firebaseArray", "$ionicPopup", "$ionicListDelegate", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray, $ionicModal, $firebaseArray, $ionicPopup, $ionicListDelegate) {
+app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsFactory", "uiCalendarConfig", "loopsArray", "$ionicModal", "$firebaseArray", "$ionicPopup", "$ionicListDelegate", "$ionicLoading", function($scope, $ionicPopover, $timeout, loopsFactory, uiCalendarConfig, loopsArray, $ionicModal, $firebaseArray, $ionicPopup, $ionicListDelegate, $ionicLoading) {
+    
+    $scope.show = function() {
+        $ionicLoading.show({
+            template: '<p>Synchronising events...</p><ion-spinner></ion-spinner>'
+        })
+    };
+    $scope.hide = function() {
+        $ionicLoading.hide();
+    };
 
     var ref = new Firebase('https://vivid-heat-1234.firebaseio.com');
     
@@ -1604,6 +1613,8 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
         userName.push(userVal.name);
         console.log(userName);
     })
+    
+    $scope.show($ionicLoading);
     
     //$scope to initialize personal events
     var personal = ref.child('personalEvents').child(uid);
@@ -1654,7 +1665,6 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     })*/
     
     userRef.on("value", function(userSnapshot) {
-        
         loopUIDfromUser.length = 0;
         var user = userSnapshot.val();
         //console.log(user);
@@ -1717,6 +1727,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                     }
                 })
                 console.log($scope.allEvents);
+                $scope.hide($ionicLoading);
                 //remove duplicates
                 /*var test=[];
                 for (var i=0; i<$scope.allEvents.length; ++i) {
@@ -2186,17 +2197,27 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
     }
 }])
 
-app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
+app.controller('SignInCtrl', function($scope, $state, $ionicPopup, $ionicLoading) {
+    $scope.show = function() {
+        $ionicLoading.show({
+            template: '<p>Authenticating...</p><ion-spinner></ion-spinner>'
+        })
+    };
+    $scope.hide = function() {
+        $ionicLoading.hide();
+    };
 
     $scope.data = {};
     
     $scope.loginEmail = function() {
         var ref = new Firebase("https://vivid-heat-1234.firebaseio.com");
+        $scope.show($ionicLoading);
         
         ref.authWithPassword({
             email: $scope.data.email,
             password: $scope.data.password }, function(error, userData) {
             if (error) {
+                $scope.hide($ionicLoading);
                 console.log("Login Failed!", error);
                 var alertPopup = $ionicPopup.alert ({
                     title: 'Unable to log in',
@@ -2204,6 +2225,7 @@ app.controller('SignInCtrl', function($scope, $state, $ionicPopup) {
                     okType: 'button-dark'
                 });
             } else {
+                $scope.hide($ionicLoading);
                 console.log("Authenticated successfully with payload:", userData);
                 $state.go('app.mycalendar');
                 //$state.go('app.loops.index');
