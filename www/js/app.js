@@ -1277,7 +1277,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                 right: 'next'
             },
             eventRender: function(event, element, view) {
-                /*element.qtip({
+                element.qtip({
                     content: {
                         title: event.title,
                         text: event.location
@@ -1293,7 +1293,7 @@ app.controller('loopCtrl', function($scope, $ionicPopover, $stateParams, $timeou
                         viewport: true,
                     }
                 });
-                element.addTouch();*/
+                element.addTouch();
             },
         },
     },
@@ -2033,7 +2033,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
             },
             eventRender: function (event, element, view) {
                 //jquery qtip functionality to highlight event title
-                /*element.qtip({
+                element.qtip({
                     content: {
                         title: event.title,
                         text: event.location
@@ -2049,7 +2049,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                         viewport: true,
                     }
                 });
-                element.addTouch();*/
+                element.addTouch();
             },
          },
     };
