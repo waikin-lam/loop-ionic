@@ -381,6 +381,7 @@ app.controller('LoopsCtrl', function($scope, $ionicPopover, $ionicPopup, loopsFa
         console.log(events);
         var test = overlapLoops.concat(events);
         console.log(test);
+        //remove duplicates
         for (var i=0; i<test.length; ++i) {
             for (var j=i+1; j<test.length; ++j) {
                 if(test[i].key === test[j].key) {
@@ -1666,7 +1667,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                 }
             }
         }
-        //console.log(loopUIDfromUser);
+        console.log(loopUIDfromUser);
         loops.on("value", function(loopSnapshot) {
             loopObject.length = 0;
             var loop = loopSnapshot.val();
@@ -1675,7 +1676,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                     //console.log(loopUID);
                     //console.log(loop[loopUID]);
                     loopObject.push({key: loopUID, name: loop[loopUID].name})
-                    //console.log(loopObject);
+                    console.log(loopObject);
                 }
             }
             //console.log(loopObject.length);
@@ -1687,7 +1688,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                     }
                 }
             })
-            //console.log($scope.filterLoops[0].key);
+            console.log($scope.filterLoops);
         })
         allEventsRoot.on("value", function (allSnapshot) {
             $timeout(function() {
@@ -1697,7 +1698,7 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                     eventKeys.push(key);
                 })
                 //console.log(eventKeys);
-                //console.log($scope.loops);
+                //console.log($scope.filterLoops);
                 //$scope.allEvents.length = 0;
                 angular.forEach(eventKeys, function (key,value){
                     for (var i=0; i<$scope.filterLoops.length; i++) {
@@ -1707,17 +1708,42 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                             eventData.on("child_added", function(allEventsSnapshot) {
                                 var allEventKey = allEventsSnapshot.key();
                                 var allEventData = allEventsSnapshot.val();
-                                //console.log(allEventKey);
-                                //console.log(allEventData);
+                                console.log(allEventKey);
+                                console.log(allEventData);
                                 $scope.allEvents.push({title: allEventData.title, start: allEventData.start, stick: allEventData.stick, location: allEventData.location, allDay: allEventData.allDay, color: allEventData.color, key: key, eventKey: allEventKey})
+                                
                             })
                         }  
                     }
                 })
-                //console.log($scope.allEvents);
+                console.log($scope.allEvents);
+                //remove duplicates
+                /*var test=[];
+                for (var i=0; i<$scope.allEvents.length; ++i) {
+                    for (var j=i+1; j<$scope.allEvents.length; ++j) {
+                        if ($scope.allEvents[i].eventKey === $scope.allEvents[j].eventKey && $scope.allEvents[i].key === $scope.allEvents[j].key || $scope.allEvents[i].$id != null) {
+                            test.push($scope.allEvents[i]);
+                            console.log(test);
+                        }
+                    }
+                }*/
+                
+                //alert instruction if [$scope.allEvents] is empty
+                if (loopUIDfromUser.length === 0 && $scope.filterLoops.length === 0 && $scope.allEvents.length === 0) {
+                    var startPopup = $ionicPopup.alert({
+                        title: 'Welcome to Loop!',
+                        template: 'Add personal events here or navigate to Loop to start a joint calendar.',
+                        buttons: [{
+                            text: "Get Started",
+                            type: 'button-dark'
+                        }]
+                    })
+                }
             })
         })
     })
+    
+   
     
     $ionicPopover.fromTemplateUrl('my-popover.html', {
         scope: $scope
@@ -2132,12 +2158,25 @@ app.controller('MyCalendarCtrl', ["$scope", "$ionicPopover", "$timeout", "loopsF
                     var remLoop = new Firebase('https://vivid-heat-1234.firebaseio.com/events/' + event.loopID + '/' + event.eventKey);
                     remLoop.remove();
                     $scope.allEventsByDate.splice($index,1);
-                    console.log($scope.allEvents);
-                    for (var i=0; i<$scope.allEvents.length; i++) {
+                    
+                    /*for (var i=0; i<$scope.allEvents.length; i++) {
                         if(event.eventKey === $scope.allEvents[i].eventKey) {
                             $scope.allEvents.splice(i,1);
                         }
-                    }
+                        //console.log($scope.allEvents);
+                    }*/
+                    $scope.allEvents.splice(0, $scope.allEvents.length);
+                    
+                    var newPersonalEvents = personal.orderByChild("start");
+                    $scope.reloadPersonalEvents = $firebaseArray(newPersonalEvents);
+                    
+                    $scope.reloadPersonalEvents.$loaded().then(function(events) {
+                        for(var i=0; i<events.length; i++) {
+                            $scope.allEvents.push(events[i]);
+                        }
+                    })
+                    console.log($scope.allEvents);
+                    
                     ref.child('changes').child(event.loopID).child(currentDateInMS).set(userName + " " + "deleted event:" + " " + event.title);
                 }
             } else {
