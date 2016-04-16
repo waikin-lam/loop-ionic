@@ -9,6 +9,7 @@
     "angular": "1.4.3"
   },
   "dependencies": {
-    "angular-ui-calendar": "~1.0.1"
+    "angular-ui-calendar": "~1.0.1",
+    "international-phone-number": "^0.0.16"
   }
 }
